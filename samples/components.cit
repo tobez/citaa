@@ -1,0 +1,24 @@
+struct component       struct component       struct component
++--------------+       +--------------+       +--------------+
+| list         |------>| list         |------>| list         |----*
+| type         |       | type         |       | type         |
+| dashed?      |       | dashed?      |       | dashed?      |
+| vertices     |       | vertices     |---*   | vertices     |---*
++--------------+       +--------------+       +--------------+
+  |
+  V struct vertex           struct vertex          struct vertex  
++----------------+       +----------------+     +----------------+
+| list           |------>| list           |---->| list           |----*
+| x              |       | x              |     | x              |
+| y              |       | y              |     | y              |
+| CHAR c         |<---\  | CHAR c         |     | CHAR c         |<------\
+| adjacency_list |    |  | adjacency_list |     | adjacency_list |       |
++----------------+    |  +----------------+     +----------------+       |
+  |                   |                           |                      |
+  |                   |                           V struct adjacent      |
+  |                   \-------------------\     +-----------------+      |
+  V struct adjacent                       |     | list            |---*  |
++-----------------+                       \-----| vertex          |      |
+| list            |---*                         +-----------------+      |
+| vertex          |------------------------------------------------------/
++-----------------+

@@ -1,0 +1,5 @@
+citaa
+*.o
+*.core
+*.swp
+core
