@@ -26,6 +26,63 @@ dump_component(struct component *c)
 	}
 }
 
+void
+compactify_component(struct component *c)
+{
+	struct vertex *v, *v_tmp, *v1, *v2;
+	struct adjacent *a, *a_tmp;
+
+	TAILQ_FOREACH_SAFE(v, &c->vertices, list, v_tmp) {
+		int n = 0, ok = 1;
+
+		switch (v->c) {
+		case '-':
+		case '=':
+			TAILQ_FOREACH(a, &v->adjacency_list, list) {
+				n++;
+				if (v->y != a->v->y)
+					ok = 0;
+			}
+			break;
+		case '|':
+		case ':':
+			TAILQ_FOREACH(a, &v->adjacency_list, list) {
+				n++;
+				if (v->x != a->v->x)
+					ok = 0;
+			}
+			break;
+		}
+		/* printf("compact attempt %c (%d,%d), ok=%d, n=%d\n", v->c, v->y, v->x, ok, n); */
+		if (ok && n == 2) {
+			a = TAILQ_FIRST(&v->adjacency_list);
+			v1 = a->v;
+
+			a = TAILQ_LAST(&v->adjacency_list, adjacency_head);
+			v2 = a->v;
+
+			TAILQ_FOREACH(a, &v1->adjacency_list, list) {
+				if (a->v->x == v->x && a->v->y == v->y) {
+					a->v = v2;
+				}
+			}
+
+			TAILQ_FOREACH(a, &v2->adjacency_list, list) {
+				if (a->v->x == v->x && a->v->y == v->y) {
+					a->v = v1;
+				}
+			}
+
+			TAILQ_REMOVE(&c->vertices, v, list);
+			TAILQ_FOREACH_SAFE(a, &v->adjacency_list, list, a_tmp) {
+				TAILQ_REMOVE(&v->adjacency_list, a, list);
+				free(a);
+			}
+			free(v);
+		}
+	}
+}
+
 struct component *
 maybe_create_component(struct component *c)
 {
@@ -446,6 +503,7 @@ main(int argc, char **argv)
 	dump_image("status", status);
 
 	TAILQ_FOREACH(c, &components, list) {
+		compactify_component(c);
 		dump_component(c);
 	}
 
