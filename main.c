@@ -78,10 +78,10 @@ maybe_create_component(struct component *c)
 }
 
 void trace_component(struct image *img, struct image *status, struct component *c, int y, int x);
-void trace_from_left(struct image *img, struct image *status, struct component *c, struct vertex *v, int y, int x);
-void trace_from_right(struct image *img, struct image *status, struct component *c, struct vertex *v, int y, int x);
-void trace_from_bottom(struct image *img, struct image *status, struct component *c, struct vertex *v, int y, int x);
-void trace_from_top(struct image *img, struct image *status, struct component *c, struct vertex *v, int y, int x);
+void trace_east(struct image *img, struct image *status, struct component *c, struct vertex *v, int y, int x);
+void trace_west(struct image *img, struct image *status, struct component *c, struct vertex *v, int y, int x);
+void trace_north(struct image *img, struct image *status, struct component *c, struct vertex *v, int y, int x);
+void trace_south(struct image *img, struct image *status, struct component *c, struct vertex *v, int y, int x);
 void trace_maybe_loop(CHAR ch, struct component *c, struct vertex *v, int y, int x, CHAR *loop_chars);
 
 void
@@ -97,18 +97,18 @@ trace_maybe_loop(CHAR ch, struct component *c, struct vertex *v, int y, int x, C
 	connect_vertices(v, u);
 }
 
-/* To the BOTTOM there can be:
+/* To the SOUTH there can be:
  *   '|'  - continuation of the trace
  *   ':'  - continuation of the trace, turn on dashes
  *   'V'  - arrow end
- *   '/'  - turn towards left
- *   '\'  - turn towards right
+ *   '/'  - turn west
+ *   '\'  - turn east
  *   '+'  - join to any direction
  *   '*'  - join to any direction
  *   Anything else terminates the trace in this direction
  */
 void
-trace_from_top(struct image *img, struct image *status, struct component *c, struct vertex *v, int y, int x)
+trace_south(struct image *img, struct image *status, struct component *c, struct vertex *v, int y, int x)
 {
 	struct vertex *u;
 	CHAR ch;
@@ -120,20 +120,14 @@ trace_from_top(struct image *img, struct image *status, struct component *c, str
 	if (status->d[y][x] != ST_EMPTY)   return trace_maybe_loop(ch, c, v, y, x, "|:V/\\+*");
 
 	switch (ch) {
+	case ':':
+		c->dashed = 1;
 	case '|':
 		status->d[y][x] = seen;
 		u = add_vertex_to_component(c, y, x, ch);
 		connect_vertices(v, u);
 		printf("V %c (%d,%d)\n", ch, y, x);
-		trace_from_top(img, status, c, u, y+1, x);
-		break;
-	case ':':
-		status->d[y][x] = seen;
-		c->dashed = 1;
-		u = add_vertex_to_component(c, y, x, ch);
-		connect_vertices(v, u);
-		printf("V %c (%d,%d)\n", ch, y, x);
-		trace_from_top(img, status, c, u, y+1, x);
+		trace_south(img, status, c, u, y+1, x);
 		break;
 	case 'V':
 		status->d[y][x] = seen;
@@ -146,51 +140,41 @@ trace_from_top(struct image *img, struct image *status, struct component *c, str
 		status->d[y][x] = seen;
 		u = add_vertex_to_component(c, y, x, ch);
 		connect_vertices(v, u);
-		printf("V %c (%d,%d) turn towards left\n", ch, y, x);
-		trace_from_right(img, status, c, u, y, x-1);
+		printf("V %c (%d,%d) turn west\n", ch, y, x);
+		trace_west(img, status, c, u, y, x-1);
 		break;
 	case '\\':
 		status->d[y][x] = seen;
 		u = add_vertex_to_component(c, y, x, ch);
 		connect_vertices(v, u);
-		printf("V %c (%d,%d) turn towards right\n", ch, y, x);
-		trace_from_left(img, status, c, u, y, x+1);
+		printf("V %c (%d,%d) turn east\n", ch, y, x);
+		trace_east(img, status, c, u, y, x+1);
 		break;
+	case '*':
 	case '+':
 		status->d[y][x] = seen;
 		u = add_vertex_to_component(c, y, x, ch);
 		connect_vertices(v, u);
 		printf("V %c (%d,%d) possible join point in V><\n", ch, y, x);
-		trace_from_top(img, status, c, u, y+1, x);
-		trace_from_right(img, status, c, u, y, x-1);
-		trace_from_left(img, status, c, u, y, x+1);
-		break;
-	case '*':
-		status->d[y][x] = seen;
-		u = add_vertex_to_component(c, y, x, ch);
-		connect_vertices(v, u);
-		printf("V %c (%d,%d) possible join point in V><\n", ch, y, x);
-		trace_from_top(img, status, c, u, y+1, x);
-		trace_from_right(img, status, c, u, y, x-1);
-		trace_from_left(img, status, c, u, y, x+1);
-		break;
-	default:
+		trace_south(img, status, c, u, y+1, x);
+		trace_west(img, status, c, u, y, x-1);
+		trace_east(img, status, c, u, y, x+1);
 		break;
 	}
 }
 
-/* To the TOP there can be:
+/* To the NORTH there can be:
  *   '|'  - continuation of the trace
  *   ':'  - continuation of the trace, turn on dashes
  *   '^'  - arrow end
- *   '/'  - turn towards right
- *   '\'  - turn towards left
+ *   '/'  - turn east
+ *   '\'  - turn west
  *   '+'  - join to any direction
  *   '*'  - join to any direction
  *   Anything else terminates the trace in this direction
  */
 void
-trace_from_bottom(struct image *img, struct image *status, struct component *c, struct vertex *v, int y, int x)
+trace_north(struct image *img, struct image *status, struct component *c, struct vertex *v, int y, int x)
 {
 	struct vertex *u;
 	CHAR ch;
@@ -202,20 +186,14 @@ trace_from_bottom(struct image *img, struct image *status, struct component *c, 
 	if (status->d[y][x] != ST_EMPTY)   return trace_maybe_loop(ch, c, v, y, x, "|:^/\\+*");
 
 	switch (ch) {
+	case ':':
+		c->dashed = 1;
 	case '|':
 		status->d[y][x] = seen;
 		u = add_vertex_to_component(c, y, x, ch);
 		connect_vertices(v, u);
 		printf("^ %c (%d,%d)\n", ch, y, x);
-		trace_from_bottom(img, status, c, u, y-1, x);
-		break;
-	case ':':
-		status->d[y][x] = seen;
-		c->dashed = 1;
-		u = add_vertex_to_component(c, y, x, ch);
-		connect_vertices(v, u);
-		printf("^ %c (%d,%d)\n", ch, y, x);
-		trace_from_bottom(img, status, c, u, y-1, x);
+		trace_north(img, status, c, u, y-1, x);
 		break;
 	case '^':
 		status->d[y][x] = seen;
@@ -228,47 +206,41 @@ trace_from_bottom(struct image *img, struct image *status, struct component *c, 
 		status->d[y][x] = seen;
 		u = add_vertex_to_component(c, y, x, ch);
 		connect_vertices(v, u);
-		printf("^ %c (%d,%d) turn towards right\n", ch, y, x);
-		trace_from_left(img, status, c, u, y, x+1);
+		printf("^ %c (%d,%d) turn east\n", ch, y, x);
+		trace_east(img, status, c, u, y, x+1);
 		break;
 	case '\\':
-		// TODO
+		status->d[y][x] = seen;
+		u = add_vertex_to_component(c, y, x, ch);
+		connect_vertices(v, u);
+		printf("^ %c (%d,%d) turn west\n", ch, y, x);
+		trace_west(img, status, c, u, y, x-1);
 		break;
+	case '*':
 	case '+':
 		status->d[y][x] = seen;
 		u = add_vertex_to_component(c, y, x, ch);
 		connect_vertices(v, u);
 		printf("^ %c (%d,%d) possible join point in ^><\n", ch, y, x);
-		trace_from_bottom(img, status, c, u, y-1, x);
-		trace_from_left(img, status, c, u, y, x+1);
-		trace_from_right(img, status, c, u, y, x-1);
-		break;
-	case '*':
-		status->d[y][x] = seen;
-		u = add_vertex_to_component(c, y, x, ch);
-		connect_vertices(v, u);
-		printf("^ %c (%d,%d) possible join point in ^><\n", ch, y, x);
-		trace_from_bottom(img, status, c, u, y-1, x);
-		trace_from_left(img, status, c, u, y, x+1);
-		trace_from_right(img, status, c, u, y, x-1);
-		break;
-	default:
+		trace_north(img, status, c, u, y-1, x);
+		trace_east(img, status, c, u, y, x+1);
+		trace_west(img, status, c, u, y, x-1);
 		break;
 	}
 }
 
-/* To the RIGHT there can be:
+/* To the EAST there can be:
  *   '-'  - continuation of the trace
  *   '='  - continuation of the trace, turn on dashes
  *   '>'  - arrow end
- *   '/'  - turn towards top
- *   '\'  - turn towards bottom
+ *   '/'  - turn north
+ *   '\'  - turn south
  *   '+'  - join to any direction
  *   '*'  - join to any direction
  *   Anything else terminates the trace in this direction
  */
 void
-trace_from_left(struct image *img, struct image *status, struct component *c, struct vertex *v, int y, int x)
+trace_east(struct image *img, struct image *status, struct component *c, struct vertex *v, int y, int x)
 {
 	struct vertex *u;
 	CHAR ch;
@@ -280,20 +252,14 @@ trace_from_left(struct image *img, struct image *status, struct component *c, st
 	if (status->d[y][x] != ST_EMPTY)   return trace_maybe_loop(ch, c, v, y, x, "-=>/\\+*");
 
 	switch (ch) {
+	case '=':
+		c->dashed = 1;
 	case '-':
 		status->d[y][x] = seen;
 		u = add_vertex_to_component(c, y, x, ch);
 		connect_vertices(v, u);
 		printf("> %c (%d,%d)\n", ch, y, x);
-		trace_from_left(img, status, c, u, y, x+1);
-		break;
-	case '=':
-		status->d[y][x] = seen;
-		c->dashed = 1;
-		u = add_vertex_to_component(c, y, x, ch);
-		connect_vertices(v, u);
-		printf("> %c (%d,%d)\n", ch, y, x);
-		trace_from_left(img, status, c, u, y, x+1);
+		trace_east(img, status, c, u, y, x+1);
 		break;
 	case '>':
 		status->d[y][x] = seen;
@@ -306,51 +272,41 @@ trace_from_left(struct image *img, struct image *status, struct component *c, st
 		status->d[y][x] = seen;
 		u = add_vertex_to_component(c, y, x, ch);
 		connect_vertices(v, u);
-		printf("> %c (%d,%d) turn towards top\n", ch, y, x);
-		trace_from_bottom(img, status, c, u, y-1, x);
+		printf("> %c (%d,%d) turn north\n", ch, y, x);
+		trace_north(img, status, c, u, y-1, x);
 		break;
 	case '\\':
 		status->d[y][x] = seen;
 		u = add_vertex_to_component(c, y, x, ch);
 		connect_vertices(v, u);
-		printf("> %c (%d,%d) turn towards bottom\n", ch, y, x);
-		trace_from_top(img, status, c, u, y+1, x);
+		printf("> %c (%d,%d) turn south\n", ch, y, x);
+		trace_south(img, status, c, u, y+1, x);
 		break;
+	case '*':
 	case '+':
 		status->d[y][x] = seen;
 		u = add_vertex_to_component(c, y, x, ch);
 		connect_vertices(v, u);
 		printf("> %c (%d,%d) possible join point in >^V\n", ch, y, x);
-		trace_from_left(img, status, c, u, y, x+1);
-		trace_from_bottom(img, status, c, u, y-1, x);
-		trace_from_top(img, status, c, u, y+1, x);
-		break;
-	case '*':
-		status->d[y][x] = seen;
-		u = add_vertex_to_component(c, y, x, ch);
-		connect_vertices(v, u);
-		printf("> %c (%d,%d) possible join point in >^V\n", ch, y, x);
-		trace_from_left(img, status, c, u, y, x+1);
-		trace_from_bottom(img, status, c, u, y-1, x);
-		trace_from_top(img, status, c, u, y+1, x);
-		break;
-	default:
+		trace_east(img, status, c, u, y, x+1);
+		trace_north(img, status, c, u, y-1, x);
+		trace_south(img, status, c, u, y+1, x);
 		break;
 	}
 }
 
-/* To the LEFT there can be:
+/* To the WEST there can be:
  *   '-'  - continuation of the trace
  *   '='  - continuation of the trace, turn on dashes
  *   '<'  - arrow end
- *   '/'  - turn towards bottom
- *   '\'  - turn towards top
+ *   '/'  - turn south
+ *   '\'  - turn north
  *   '+'  - join to any direction
  *   '*'  - join to any direction
  *   Anything else terminates the trace in this direction
  */
 void
-trace_from_right(struct image *img, struct image *status, struct component *c, struct vertex *v, int y, int x)
+trace_west(struct image *img, struct image *status, struct component *c, struct vertex *v, int y, int x)
 {
 	struct vertex *u;
 	CHAR ch;
@@ -362,20 +318,14 @@ trace_from_right(struct image *img, struct image *status, struct component *c, s
 	if (status->d[y][x] != ST_EMPTY)   return trace_maybe_loop(ch, c, v, y, x, "-=</\\+*");
 
 	switch (ch) {
+	case '=':
+		c->dashed = 1;
 	case '-':
 		status->d[y][x] = seen;
 		u = add_vertex_to_component(c, y, x, ch);
 		connect_vertices(v, u);
 		printf("< %c (%d,%d)\n", ch, y, x);
-		trace_from_right(img, status, c, u, y, x-1);
-		break;
-	case '=':
-		status->d[y][x] = seen;
-		c->dashed = 1;
-		u = add_vertex_to_component(c, y, x, ch);
-		connect_vertices(v, u);
-		printf("< %c (%d,%d)\n", ch, y, x);
-		trace_from_right(img, status, c, u, y, x-1);
+		trace_west(img, status, c, u, y, x-1);
 		break;
 	case '<':
 		status->d[y][x] = seen;
@@ -388,35 +338,25 @@ trace_from_right(struct image *img, struct image *status, struct component *c, s
 		status->d[y][x] = seen;
 		u = add_vertex_to_component(c, y, x, ch);
 		connect_vertices(v, u);
-		printf("< %c (%d,%d) turn towards bottom\n", ch, y, x);
-		trace_from_top(img, status, c, u, y+1, x);
+		printf("< %c (%d,%d) turn south\n", ch, y, x);
+		trace_south(img, status, c, u, y+1, x);
 		break;
 	case '\\':
 		status->d[y][x] = seen;
 		u = add_vertex_to_component(c, y, x, ch);
 		connect_vertices(v, u);
-		printf("< %c (%d,%d) turn towards top\n", ch, y, x);
-		trace_from_bottom(img, status, c, u, y-1, x);
+		printf("< %c (%d,%d) turn north\n", ch, y, x);
+		trace_north(img, status, c, u, y-1, x);
 		break;
+	case '*':
 	case '+':
 		status->d[y][x] = seen;
 		u = add_vertex_to_component(c, y, x, ch);
 		connect_vertices(v, u);
 		printf("< %c (%d,%d) possible join point in <^V\n", ch, y, x);
-		trace_from_right(img, status, c, u, y, x-1);
-		trace_from_bottom(img, status, c, u, y-1, x);
-		trace_from_top(img, status, c, u, y+1, x);
-		break;
-	case '*':
-		status->d[y][x] = seen;
-		u = add_vertex_to_component(c, y, x, ch);
-		connect_vertices(v, u);
-		printf("< %c (%d,%d) possible join point in <^V\n", ch, y, x);
-		trace_from_right(img, status, c, u, y, x-1);
-		trace_from_bottom(img, status, c, u, y-1, x);
-		trace_from_top(img, status, c, u, y+1, x);
-		break;
-	default:
+		trace_west(img, status, c, u, y, x-1);
+		trace_north(img, status, c, u, y-1, x);
+		trace_south(img, status, c, u, y+1, x);
 		break;
 	}
 }
@@ -440,8 +380,8 @@ trace_component(struct image *img, struct image *status, struct component *c, in
 		status->d[y][x] = seen;
 		u = add_vertex_to_component(c, y, x, ch);
 		printf("%c (%d,%d)\n", ch, y, x);
-		trace_from_left(img, status, c, u, y, x+1);
-		trace_from_right(img, status, c, u, y, x-1);
+		trace_east(img, status, c, u, y, x+1);
+		trace_west(img, status, c, u, y, x-1);
 		break;
 	case '|':
 		c = maybe_create_component(c);
@@ -449,11 +389,8 @@ trace_component(struct image *img, struct image *status, struct component *c, in
 		status->d[y][x] = seen;
 		u = add_vertex_to_component(c, y, x, ch);
 		printf("%c (%d,%d)\n", ch, y, x);
-		trace_from_bottom(img, status, c, u, y-1, x);
-		trace_from_top(img, status, c, u, y+1, x);
-		break;
-	default:
-		/* do nothing */
+		trace_north(img, status, c, u, y-1, x);
+		trace_south(img, status, c, u, y+1, x);
 		break;
 	}
 }
