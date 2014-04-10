@@ -29,56 +29,34 @@ dump_component(struct component *c)
 void
 compactify_component(struct component *c)
 {
-	struct vertex *v, *v_tmp, *v1, *v2;
-	struct adjacent *a, *a_tmp;
+	struct vertex *v, *v_tmp;
 
 	TAILQ_FOREACH_SAFE(v, &c->vertices, list, v_tmp) {
-		int n = 0, ok = 1;
-
 		switch (v->c) {
 		case '-':
 		case '=':
-			TAILQ_FOREACH(a, &v->adjacency_list, list) {
-				n++;
-				if (v->y != a->v->y)
-					ok = 0;
+			// broken_if(v->e[NORTH], "%c(%d,%d) vertex has a northern edge", v->c, v->y, v->x);
+			// broken_if(v->e[SOUTH], "%c(%d,%d) vertex has a southern edge", v->c, v->y, v->x);
+
+			if (v->e[WEST] && v->e[EAST]) {
+				v->e[WEST]->e[EAST] = v->e[EAST];
+				v->e[EAST]->e[WEST] = v->e[WEST];
+				TAILQ_REMOVE(&c->vertices, v, list);
+				free(v);
 			}
 			break;
 		case '|':
 		case ':':
-			TAILQ_FOREACH(a, &v->adjacency_list, list) {
-				n++;
-				if (v->x != a->v->x)
-					ok = 0;
+			// broken_if(v->e[WEST], "%c(%d,%d) vertex has a western edge", v->c, v->y, v->x);
+			// broken_if(v->e[EAST], "%c(%d,%d) vertex has an eastern edge", v->c, v->y, v->x);
+
+			if (v->e[NORTH] && v->e[SOUTH]) {
+				v->e[NORTH]->e[SOUTH] = v->e[SOUTH];
+				v->e[SOUTH]->e[NORTH] = v->e[NORTH];
+				TAILQ_REMOVE(&c->vertices, v, list);
+				free(v);
 			}
 			break;
-		}
-		/* printf("compact attempt %c (%d,%d), ok=%d, n=%d\n", v->c, v->y, v->x, ok, n); */
-		if (ok && n == 2) {
-			a = TAILQ_FIRST(&v->adjacency_list);
-			v1 = a->v;
-
-			a = TAILQ_LAST(&v->adjacency_list, adjacency_head);
-			v2 = a->v;
-
-			TAILQ_FOREACH(a, &v1->adjacency_list, list) {
-				if (a->v->x == v->x && a->v->y == v->y) {
-					a->v = v2;
-				}
-			}
-
-			TAILQ_FOREACH(a, &v2->adjacency_list, list) {
-				if (a->v->x == v->x && a->v->y == v->y) {
-					a->v = v1;
-				}
-			}
-
-			TAILQ_REMOVE(&c->vertices, v, list);
-			TAILQ_FOREACH_SAFE(a, &v->adjacency_list, list, a_tmp) {
-				TAILQ_REMOVE(&v->adjacency_list, a, list);
-				free(a);
-			}
-			free(v);
 		}
 	}
 }
@@ -116,7 +94,7 @@ trace_maybe_loop(CHAR ch, struct component *c, struct vertex *v, int y, int x, C
 	u = find_vertex_in_component(c, y, x);
 	if (!u) return;
 
-	maybe_connect_vertices(v, u);
+	connect_vertices(v, u);
 }
 
 /* To the BOTTOM there can be:

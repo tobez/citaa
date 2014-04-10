@@ -3,6 +3,14 @@
 
 #include "bsdqueue.h"
 
+#define EAST  0
+#define NORTH 1
+#define WEST  2
+#define SOUTH 3
+
+#define COMPASS_FIRST EAST
+#define COMPASS_LAST  SOUTH
+
 typedef char CHAR;
 
 struct image
@@ -63,7 +71,6 @@ typedef struct _LAG
    int *codedAreas;              /* Area of components is very useful */
 } LAG, *PLAG;
 
-TAILQ_HEAD(adjacency_head, adjacent);
 TAILQ_HEAD(vertex_head, vertex);
 
 struct vertex
@@ -71,14 +78,7 @@ struct vertex
 	TAILQ_ENTRY(vertex) list;
 	int x, y;
 	CHAR c;
-	struct adjacency_head adjacency_list;
-	/* more stuff */
-};
-
-struct adjacent
-{
-	TAILQ_ENTRY(adjacent) list;
-	struct vertex *v;
+	struct vertex *e[4];  /* edges in four directions */
 };
 
 struct component
@@ -100,7 +100,6 @@ struct image *image_dilate( struct image *in, int neighborhood);
 struct vertex *add_vertex(struct vertex_head *vs, int y, int x, CHAR c);
 struct vertex *add_vertex_to_component(struct component *c, int y, int x, CHAR ch);
 void connect_vertices(struct vertex *v1, struct vertex *v2);
-void maybe_connect_vertices(struct vertex *v1, struct vertex *v2);
 void dump_vertex(struct vertex *v);
 struct vertex *find_vertex_in_component(struct component *c, int y, int x);
 

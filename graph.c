@@ -7,11 +7,10 @@
 void
 dump_vertex(struct vertex *v)
 {
-	struct adjacent *a;
-
 	printf("vertex %c (%d,%d), connected to ", v->c, v->y, v->x);
-	TAILQ_FOREACH(a, &v->adjacency_list, list) {
-		printf("[%c (%d,%d)] ", a->v->c, a->v->y, a->v->x);
+	for (int dir = COMPASS_FIRST; dir <= COMPASS_LAST; dir++) {
+		if (v->e[dir])
+			printf("[%c (%d,%d)] ", v->e[dir]->c, v->e[dir]->y, v->e[dir]->x);
 	}
 	printf("\n");
 }
@@ -39,7 +38,9 @@ add_vertex(struct vertex_head *vs, int y, int x, CHAR c)
 	v->x = x;
 	v->y = y;
 	v->c = c;
-	TAILQ_INIT(&v->adjacency_list);
+	for (int dir = COMPASS_FIRST; dir <= COMPASS_LAST; dir++) {
+		v->e[dir] = NULL;
+	}
 	TAILQ_INSERT_TAIL(vs, v, list);
 
 	return v;
@@ -54,52 +55,31 @@ add_vertex_to_component(struct component *c, int y, int x, CHAR ch)
 void
 connect_vertices(struct vertex *v1, struct vertex *v2)
 {
-	struct adjacent *a1, *a2;
-
-	a1 = malloc(sizeof(struct adjacent));
-	if (!a1) croak(1, "connect_vertices:malloc(adjacent)");
-	a1->v = v1;
-
-	a2 = malloc(sizeof(struct adjacent));
-	if (!a2) croak(1, "connect_vertices:malloc(adjacent)");
-	a2->v = v2;
-
-	TAILQ_INSERT_TAIL(&v1->adjacency_list, a2, list);
-	TAILQ_INSERT_TAIL(&v2->adjacency_list, a1, list);
-}
-
-void
-maybe_connect_vertices(struct vertex *v1, struct vertex *v2)
-{
-	struct adjacent *a1, *a2, *a;
-
-	a1 = NULL;
-	TAILQ_FOREACH(a, &v2->adjacency_list, list) {
-		if (a->v->y == v1->y && a->v->x == v1->x)
-			a1 = a;
-	}
-	if (!a1) {
-		a1 = malloc(sizeof(struct adjacent));
-		if (!a1) croak(1, "connect_vertices:malloc(adjacent)");
-		a1->v = v1;
+	if (v1->y == v2->y) {
+		if (v1->x < v2->x) {
+			v1->e[EAST] = v2;
+			v2->e[WEST] = v1;
+		} else if (v1->x > v2->x) {
+			v1->e[WEST] = v2;
+			v2->e[EAST] = v1;
+		} else {
+			croakx(1, "internal: connect_vertices: connecting (%d,%d) to self",
+				   v1->y, v1->x);
+		}
+	} else if (v1->x == v2->x) {
+		if (v1->y < v2->y) {
+			v1->e[SOUTH] = v2;
+			v2->e[NORTH] = v1;
+		} else if (v1->y > v2->y) {
+			v1->e[NORTH] = v2;
+			v2->e[SOUTH] = v1;
+		} else {
+			/* unreach */
+			croakx(1, "internal unreach: connect_vertices: connecting (%d,%d) to self",
+				   v1->y, v1->x);
+		}
 	} else {
-		a1 = NULL;
+		croakx(1, "internal: connect_vertices: bad direction between (%d,%d) and (%d,%d)",
+			   v1->y, v1->x, v2->y, v2->x);
 	}
-
-	a2 = NULL;
-	TAILQ_FOREACH(a, &v1->adjacency_list, list) {
-		if (a->v->y == v2->y && a->v->x == v2->x)
-			a2 = a;
-	}
-	if (!a2) {
-		a2 = malloc(sizeof(struct adjacent));
-		if (!a2) croak(1, "connect_vertices:malloc(adjacent)");
-		a2->v = v2;
-	} else {
-		a2 = NULL;
-	}
-
-	if (a2) TAILQ_INSERT_TAIL(&v1->adjacency_list, a2, list);
-	if (a1) TAILQ_INSERT_TAIL(&v2->adjacency_list, a1, list);
 }
-
