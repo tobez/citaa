@@ -7,8 +7,10 @@
 void
 dump_vertex(struct vertex *v)
 {
+	int dir;
+
 	printf("vertex %c (%d,%d), connected to ", v->c, v->y, v->x);
-	for (int dir = COMPASS_FIRST; dir <= COMPASS_LAST; dir++) {
+	for (dir = COMPASS_FIRST; dir <= COMPASS_LAST; dir++) {
 		if (v->e[dir])
 			printf("[%c (%d,%d)] ", v->e[dir]->c, v->e[dir]->y, v->e[dir]->x);
 	}
@@ -31,6 +33,7 @@ struct vertex*
 add_vertex(struct vertex_head *vs, int y, int x, CHAR c)
 {
 	struct vertex *v;
+	int dir;
 
 	v = malloc(sizeof(struct vertex));
 	if (!v) croak(1, "add_vertex:malloc(vertex)");
@@ -38,7 +41,7 @@ add_vertex(struct vertex_head *vs, int y, int x, CHAR c)
 	v->x = x;
 	v->y = y;
 	v->c = c;
-	for (int dir = COMPASS_FIRST; dir <= COMPASS_LAST; dir++) {
+	for (dir = COMPASS_FIRST; dir <= COMPASS_LAST; dir++) {
 		v->e[dir] = NULL;
 	}
 	TAILQ_INSERT_TAIL(vs, v, list);

@@ -462,8 +462,8 @@ int
 main(int argc, char **argv)
 {
 	struct image *orig, *blob, *no_holes, *eroded, *dilated, *status;
-	PLAG lag;
 	struct component *c;
+	int x, y, i;
 
 	orig = read_image(stdin);
 
@@ -473,8 +473,8 @@ main(int argc, char **argv)
 	TAILQ_INIT(&components);
 	seen = ST_SEEN;
 
-	for (int y = 0; y < orig->h; y++) {
-		for (int x = 0; x < orig->w; x++) {
+	for (y = 0; y < orig->h; y++) {
+		for (x = 0; x < orig->w; x++) {
 			trace_component(orig, status, NULL, y, x);
 		}
 	}
@@ -488,7 +488,7 @@ main(int argc, char **argv)
 	return 0;
 
 	blob = copy_image(orig);
-	for (int i = 0; i < blob->h; i++) {
+	for (i = 0; i < blob->h; i++) {
 		CHAR *s = blob->d[i];
 		while (*s) {
 			if (*s == '+' ||
@@ -533,8 +533,9 @@ main(int argc, char **argv)
 void
 dump_image(const char *title, struct image *img)
 {
+	int i;
 	printf("Image dump of \"%s\", size %dx%d\n", title, img->w, img->h);
-	for (int i = 0; i < img->h; i++) {
+	for (i = 0; i < img->h; i++) {
 		printf("%03d: |%s|\n", i, img->d[i]);
 	}
 }

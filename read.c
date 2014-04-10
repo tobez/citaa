@@ -9,6 +9,7 @@ read_image(FILE *f)
 {
 	struct image *img;
 	int ch = 100;
+	int i;
 	CHAR buf[65536];
 
 	img = malloc(sizeof(*img));
@@ -40,7 +41,7 @@ read_image(FILE *f)
 
 	img->d = realloc(img->d, sizeof(CHAR *) * img->h);
 	if (!img->d) croak(1, "read_image:realloc(d trunc %d)", img->h);
-	for (int i = 0; i < img->h; i++) {
+	for (i = 0; i < img->h; i++) {
 		CHAR *r = malloc(sizeof(CHAR)*(img->w + 1));
 		if (!r) croak(1, "read_image:malloc(row %d, %d chars)", i, img->w+1);
 		memset(r, ' ', img->w);

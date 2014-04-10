@@ -8,6 +8,7 @@ struct image *
 copy_image(struct image *src)
 {
 	struct image *dst;
+	int i;
 
 	dst = malloc(sizeof(*dst));
 	if (!dst) croak(1, "copy_image:malloc(dst)");
@@ -17,7 +18,7 @@ copy_image(struct image *src)
 	dst->d = malloc(sizeof(CHAR *) * dst->h);
 	if (!dst->d) croak(1, "copy_image:malloc(d)");
 
-	for (int i = 0; i < dst->h; i++) {
+	for (i = 0; i < dst->h; i++) {
 		CHAR *r = malloc(sizeof(CHAR)*(dst->w + 1));
 		if (!r) croak(1, "copy_image:malloc(row %d, %d chars)", i, dst->w+1);
 		memset(r, ' ', dst->w);
@@ -33,6 +34,7 @@ struct image *
 create_image(int h, int w, CHAR init)
 {
 	struct image *dst;
+	int i;
 
 	dst = malloc(sizeof(*dst));
 	if (!dst) croak(1, "create_image:malloc(dst)");
@@ -42,7 +44,7 @@ create_image(int h, int w, CHAR init)
 	dst->d = malloc(sizeof(CHAR *) * dst->h);
 	if (!dst->d) croak(1, "create_image:malloc(d)");
 
-	for (int i = 0; i < dst->h; i++) {
+	for (i = 0; i < dst->h; i++) {
 		CHAR *r = malloc(sizeof(CHAR)*(dst->w + 1));
 		if (!r) croak(1, "create_image:malloc(row %d, %d chars)", i, dst->w+1);
 		memset(r, init, dst->w);
@@ -56,6 +58,7 @@ create_image(int h, int w, CHAR init)
 struct image* expand_image(struct image *src, int x, int y)
 {
 	struct image *dst;
+	int i;
 
 	dst = malloc(sizeof(*dst));
 	if (!dst) croak(1, "expand_image:malloc(dst)");
@@ -65,7 +68,7 @@ struct image* expand_image(struct image *src, int x, int y)
 	dst->d = malloc(sizeof(CHAR *) * dst->h);
 	if (!dst->d) croak(1, "copy_image:malloc(d)");
 
-	for (int i = 0; i < dst->h; i++) {
+	for (i = 0; i < dst->h; i++) {
 		CHAR *r = malloc(sizeof(CHAR)*(dst->w + 1));
 		if (!r) croak(1, "copy_image:malloc(row %d, %d chars)", i, dst->w+1);
 		memset(r, ' ', dst->w);
@@ -102,9 +105,11 @@ free_lag( PLAG lag)
 void
 dump_lag( PLAG lag)
 {
-   for (int i = 0; i < lag-> h; i++) {
+	int i, j;
+
+   for (i = 0; i < lag-> h; i++) {
 	   printf("%03d: ", i);
-	   for (int j = 0; j < lag->lineCount[i]; j++) {
+	   for (j = 0; j < lag->lineCount[i]; j++) {
 		   printf("%d-%d[%d] ",
 				  lag->scanLines[i][j].beg, lag->scanLines[i][j].end,
 				  lag->scanLines[i][j].code);
