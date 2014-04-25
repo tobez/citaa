@@ -11,7 +11,16 @@
 #define COMPASS_FIRST EAST
 #define COMPASS_LAST  SOUTH
 
+#define ST_EMPTY ' '
+#define ST_SEEN '0'
+
+#define CT_UNKNOWN 0
+#define CT_LINE    1
+#define CT_BOX     2
+
 typedef char CHAR;
+
+extern CHAR seen;
 
 struct image
 {
@@ -102,5 +111,7 @@ struct vertex *add_vertex_to_component(struct component *c, int y, int x, CHAR c
 void connect_vertices(struct vertex *v1, struct vertex *v2);
 void dump_vertex(struct vertex *v);
 struct vertex *find_vertex_in_component(struct component *c, int y, int x);
+void trace_component(struct image *img, struct image *status, struct component *c, int y, int x);
+struct component *maybe_create_component(struct component *c);
 
 #endif

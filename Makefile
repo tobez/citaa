@@ -2,9 +2,9 @@ OPTIMIZE?=-O2 -g
 CFLAGS?=-Wall -Werror -fno-strict-aliasing
 CC?=cc
 
-citaa: main.o carp.o read.o image.o graph.o
+citaa: main.o carp.o read.o image.o graph.o trace.o
 	$(CC) $(CFLAGS) $(OPTIMIZE) -o citaa \
-	    main.o carp.o read.o image.o graph.o
+	    main.o carp.o read.o image.o graph.o trace.o
 
 clean:
 	rm citaa main.o carp.o read.o image.o graph.o
@@ -23,4 +23,7 @@ image.o: image.c citaa.h
 
 graph.o: graph.c citaa.h
 	$(CC) -c $(CFLAGS) $(OPTIMIZE) -o graph.o graph.c
+
+trace.o: trace.c citaa.h
+	$(CC) -c $(CFLAGS) $(OPTIMIZE) -o trace.o trace.c
 
