@@ -101,6 +101,8 @@ struct component
 };
 TAILQ_HEAD(component_head, component);
 
+extern struct component_head connected_components;
+
 void free_lag( PLAG lag);
 PLAG build_lag( struct image *im, CHAR c);
 void find_lag_components( PLAG lag, int edgeSize, int eightConnectivity);
@@ -114,6 +116,6 @@ void connect_vertices(struct vertex *v1, struct vertex *v2);
 void dump_vertex(struct vertex *v);
 struct vertex *find_vertex_in_component(struct component *c, int y, int x);
 void trace_component(struct image *img, struct image *status, struct component *c, int y, int x);
-struct component *maybe_create_component(struct component *c);
+struct component *create_component(struct component_head *storage);
 
 #endif

@@ -58,18 +58,17 @@ compactify_component(struct component *c)
 }
 
 struct component *
-maybe_create_component(struct component *c)
+create_component(struct component_head *storage)
 {
-	if (c) return c;
-
-	c = malloc(sizeof(struct component));
+	struct component *c = malloc(sizeof(struct component));
 	if (!c) croak(1, "maybe_create_component:malloc(component)");
 
 	c->type = CT_UNKNOWN;
 	c->dashed = 0;
 	TAILQ_INIT(&c->vertices);
 
-	TAILQ_INSERT_TAIL(&connected_components, c, list);
+	if (storage)
+		TAILQ_INSERT_TAIL(storage, c, list);
 	return c;
 }
 
@@ -80,10 +79,10 @@ extract_one_loop(struct vertex *v0, int dir, struct component_head *storage)
 	struct component *c;
 	int i, new_dir;
 
-	printf("extracting loop (%d,%d)\"%c\" -> %s\n", v0->y, v0->x, v0->c, DIR[dir]);
+	printf("==LOOP\n");
 
 	u = v0;
-	c = maybe_create_component(NULL);
+	c = create_component(storage);
 	u_ = add_vertex_to_component(c, u->y, u->x, u->c);
 
 	while (1) {
@@ -100,10 +99,8 @@ extract_one_loop(struct vertex *v0, int dir, struct component_head *storage)
 		if (v == v0) break;
 
 		u = NULL;
-		for (i = 1; i <= 4; i++) {
-			new_dir = (dir + i) % N_DIRECTIONS;
-			if ((new_dir + 2) % N_DIRECTIONS == dir)
-				continue;	/* never go back */
+		for (i = 1; i >= -1; i--) {
+			new_dir = (dir + i + 4) % N_DIRECTIONS;
 			if (v->e[new_dir]) {
 				u = v;
 				u_ = v_;
@@ -115,8 +112,6 @@ extract_one_loop(struct vertex *v0, int dir, struct component_head *storage)
 		if (!u)	croakx(1, "extract_one_loop: cannot decide where to go from (%d,%d)\"%c\" -> %s",
 					   v->y, v->x, v->c, DIR[dir]);
 	}
-
-	dump_component(c);
 }
 
 void
@@ -128,15 +123,10 @@ extract_loops(struct component *o, struct component_head *storage)
 
 	TAILQ_INIT(&tmp);
 
-	printf("original component:\n");
-	dump_component(o);
-
 	TAILQ_FOREACH(v, &o->vertices, list) {
 		for (dir = COMPASS_FIRST; dir <= COMPASS_LAST; dir++) {
 			if (v->e[dir]) {
 				extract_one_loop(v, dir, &tmp);
-				printf("after one loop extraction, original:\n");
-				dump_component(o);
 			}
 		}
 	}

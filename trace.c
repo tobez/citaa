@@ -302,7 +302,7 @@ trace_component(struct image *img, struct image *status, struct component *c, in
 
 	switch (ch) {
 	case '-':
-		c = maybe_create_component(c);
+		if (!c) c = create_component(&connected_components);
 		++seen;
 		status->d[y][x] = seen;
 		u = add_vertex_to_component(c, y, x, ch);
@@ -311,7 +311,7 @@ trace_component(struct image *img, struct image *status, struct component *c, in
 		trace_west(img, status, c, u, y, x-1);
 		break;
 	case '|':
-		c = maybe_create_component(c);
+		if (!c) c = create_component(&connected_components);
 		++seen;
 		status->d[y][x] = seen;
 		u = add_vertex_to_component(c, y, x, ch);
