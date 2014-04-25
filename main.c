@@ -13,6 +13,7 @@
 #define CT_BOX     2
 
 struct component_head connected_components;
+struct component_head components;
 CHAR seen;
 
 void
@@ -395,6 +396,14 @@ trace_component(struct image *img, struct image *status, struct component *c, in
 	}
 }
 
+void
+extract_loops(struct component *o, struct component_head *storage)
+{
+	struct component_head tmp;
+
+	TAILQ_INIT(&tmp);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -417,8 +426,13 @@ main(int argc, char **argv)
 	}
 	dump_image("status", status);
 
+	TAILQ_INIT(&components);
 	TAILQ_FOREACH(c, &connected_components, list) {
 		compactify_component(c);
+		// extract_branches(c, &components);
+		// extract_loops(c, &components);
+	}
+	TAILQ_FOREACH(c, &components, list) {
 		dump_component(c);
 	}
 
