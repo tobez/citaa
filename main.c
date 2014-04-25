@@ -9,6 +9,8 @@ struct component_head connected_components;
 struct component_head components;
 CHAR seen;
 
+CHAR *DIR[] = {"EAST", "NORTH", "WEST", "SOUTH"};
+
 void
 dump_component(struct component *c)
 {
@@ -72,11 +74,72 @@ maybe_create_component(struct component *c)
 }
 
 void
+extract_one_loop(struct vertex *v0, int dir, struct component_head *storage)
+{
+	struct vertex *u, *v, *u_, *v_;
+	struct component *c;
+	int i, new_dir;
+
+	printf("extracting loop (%d,%d)\"%c\" -> %s\n", v0->y, v0->x, v0->c, DIR[dir]);
+
+	u = v0;
+	c = maybe_create_component(NULL);
+	u_ = add_vertex_to_component(c, u->y, u->x, u->c);
+
+	while (1) {
+		v = u->e[dir];
+		printf("coming from (%d,%d) to (%d,%d) due %s\n",
+			   u->y, u->x, v->y, v->x, DIR[dir]);
+		if (v == v0)
+			v_ = find_vertex_in_component(c, v->y, v->x);
+		else
+			v_ = add_vertex_to_component(c, v->y, v->x, v->c);
+		connect_vertices(u_, v_);
+		u->e[dir] = NULL;  /* remove the edge we just followed */
+
+		if (v == v0) break;
+
+		u = NULL;
+		for (i = 1; i <= 4; i++) {
+			new_dir = (dir + i) % N_DIRECTIONS;
+			if ((new_dir + 2) % N_DIRECTIONS == dir)
+				continue;	/* never go back */
+			if (v->e[new_dir]) {
+				u = v;
+				u_ = v_;
+				dir = new_dir;
+				break;
+			}
+		}
+
+		if (!u)	croakx(1, "extract_one_loop: cannot decide where to go from (%d,%d)\"%c\" -> %s",
+					   v->y, v->x, v->c, DIR[dir]);
+	}
+
+	dump_component(c);
+}
+
+void
 extract_loops(struct component *o, struct component_head *storage)
 {
 	struct component_head tmp;
+	struct vertex *v;
+	int dir;
 
 	TAILQ_INIT(&tmp);
+
+	printf("original component:\n");
+	dump_component(o);
+
+	TAILQ_FOREACH(v, &o->vertices, list) {
+		for (dir = COMPASS_FIRST; dir <= COMPASS_LAST; dir++) {
+			if (v->e[dir]) {
+				extract_one_loop(v, dir, &tmp);
+				printf("after one loop extraction, original:\n");
+				dump_component(o);
+			}
+		}
+	}
 }
 
 int
@@ -105,7 +168,7 @@ main(int argc, char **argv)
 	TAILQ_FOREACH(c, &connected_components, list) {
 		compactify_component(c);
 		// extract_branches(c, &components);
-		// extract_loops(c, &components);
+		extract_loops(c, &components);
 	}
 	TAILQ_FOREACH(c, &components, list) {
 		dump_component(c);

@@ -10,6 +10,7 @@
 
 #define COMPASS_FIRST EAST
 #define COMPASS_LAST  SOUTH
+#define N_DIRECTIONS  4
 
 #define ST_EMPTY ' '
 #define ST_SEEN '0'
@@ -21,6 +22,7 @@
 typedef char CHAR;
 
 extern CHAR seen;
+extern CHAR *DIR[];
 
 struct image
 {

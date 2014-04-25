@@ -12,7 +12,7 @@ dump_vertex(struct vertex *v)
 	printf("vertex %c (%d,%d), connected to ", v->c, v->y, v->x);
 	for (dir = COMPASS_FIRST; dir <= COMPASS_LAST; dir++) {
 		if (v->e[dir])
-			printf("[%c (%d,%d)] ", v->e[dir]->c, v->e[dir]->y, v->e[dir]->x);
+			printf("[%c to %s (%d,%d)] ", v->e[dir]->c, DIR[dir], v->e[dir]->y, v->e[dir]->x);
 	}
 	printf("\n");
 }
