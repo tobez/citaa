@@ -12,7 +12,7 @@
 #define CT_LINE    1
 #define CT_BOX     2
 
-struct component_head components;
+struct component_head connected_components;
 CHAR seen;
 
 void
@@ -73,7 +73,7 @@ maybe_create_component(struct component *c)
 	c->dashed = 0;
 	TAILQ_INIT(&c->vertices);
 
-	TAILQ_INSERT_TAIL(&components, c, list);
+	TAILQ_INSERT_TAIL(&connected_components, c, list);
 	return c;
 }
 
@@ -407,7 +407,7 @@ main(int argc, char **argv)
 	dump_image("original", orig);
 
 	status = create_image(orig->h, orig->w, ST_EMPTY);
-	TAILQ_INIT(&components);
+	TAILQ_INIT(&connected_components);
 	seen = ST_SEEN;
 
 	for (y = 0; y < orig->h; y++) {
@@ -417,7 +417,7 @@ main(int argc, char **argv)
 	}
 	dump_image("status", status);
 
-	TAILQ_FOREACH(c, &components, list) {
+	TAILQ_FOREACH(c, &connected_components, list) {
 		compactify_component(c);
 		dump_component(c);
 	}
