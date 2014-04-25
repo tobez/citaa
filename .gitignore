@@ -3,3 +3,4 @@ citaa
 *.core
 *.swp
 core
+samples/*.png
