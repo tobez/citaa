@@ -87,6 +87,7 @@ calculate_loop_area(struct component *c)
 	struct vertex *v, *min_v, *v0, *v1;
 	int dir, new_dir, i;
 
+	min_v = NULL;
 	TAILQ_FOREACH(v, &c->vertices, list) {
 		if (v->x < min_x) {
 			min_x = v->x;
