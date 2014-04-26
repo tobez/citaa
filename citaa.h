@@ -22,7 +22,8 @@
 typedef char CHAR;
 
 extern CHAR seen;
-extern CHAR *DIR[];
+extern char *DIR[];
+extern char *COMPONENT_TYPE[];
 
 struct image
 {

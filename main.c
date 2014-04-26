@@ -10,14 +10,18 @@ struct component_head connected_components;
 struct component_head components;
 CHAR seen;
 
-CHAR *DIR[] = {"EAST", "NORTH", "WEST", "SOUTH"};
+char *DIR[] = {"EAST", "NORTH", "WEST", "SOUTH"};
+char *COMPONENT_TYPE[] = {"UNKNOWN", "LINE", "BOX"};
 
 void
 dump_component(struct component *c)
 {
 	struct vertex *v;
 
-	printf("components type %d, dashed %d\n", c->type, c->dashed);
+	if (c->type == CT_BOX)
+		printf("%s component, area %d\n", COMPONENT_TYPE[c->type], c->area);
+	else
+		printf("%s component\n", COMPONENT_TYPE[c->type]);
 	TAILQ_FOREACH(v, &c->vertices, list) {
 		dump_vertex(v);
 	}
@@ -165,6 +169,7 @@ void
 extract_loops(struct component *o, struct component_head *storage)
 {
 	struct component_head tmp;
+	struct component *c, *c_tmp, *c_max;
 	struct vertex *v;
 	int dir;
 
@@ -175,6 +180,19 @@ extract_loops(struct component *o, struct component_head *storage)
 			if (v->e[dir]) {
 				extract_one_loop(v, dir, &tmp);
 			}
+		}
+	}
+
+	c_max = NULL;
+	TAILQ_FOREACH(c, &tmp, list) {
+		if (!c_max || c->area > c_max->area)
+			c_max = c;
+	}
+	TAILQ_FOREACH_SAFE(c, &tmp, list, c_tmp) {
+		TAILQ_REMOVE(&tmp, c, list);
+		if (c != c_max) {
+			c->type = CT_BOX;
+			TAILQ_INSERT_TAIL(storage, c, list);
 		}
 	}
 }
