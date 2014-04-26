@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 
 #include "citaa.h"
 #include "bsdqueue.h"
@@ -61,15 +62,59 @@ struct component *
 create_component(struct component_head *storage)
 {
 	struct component *c = malloc(sizeof(struct component));
-	if (!c) croak(1, "maybe_create_component:malloc(component)");
+	if (!c) croak(1, "create_component:malloc(component)");
 
 	c->type = CT_UNKNOWN;
 	c->dashed = 0;
+	c->area = 0;
 	TAILQ_INIT(&c->vertices);
 
 	if (storage)
 		TAILQ_INSERT_TAIL(storage, c, list);
 	return c;
+}
+
+void
+calculate_loop_area(struct component *c)
+{
+	int min_x = INT_MAX;
+	int min_y = INT_MAX;
+	int area = 0;
+	struct vertex *v, *min_v, *v0, *v1;
+	int dir, new_dir, i;
+
+	TAILQ_FOREACH(v, &c->vertices, list) {
+		if (v->x < min_x) {
+			min_x = v->x;
+			min_y = v->y;
+			min_v = v;
+		} else if (v->x == min_x && v->y < min_y) {
+			min_y = v->y;
+			min_v = v;
+		}
+	}
+
+	/* The min_v vertex is now the topmost of the leftmost vertices.
+	 * Moreover, there MUST be a way to the EAST from here. */
+	v0 = min_v;
+	dir = EAST;
+	while (1) {
+		v1 = v0->e[dir];
+		area += (v0->x - v1->x) * v1->y;
+
+		if (v1 == min_v)
+			break;
+
+		for (i = 1; i >= -1; i--) {
+			new_dir = (dir + i + 4) % N_DIRECTIONS;
+			if (v1->e[new_dir]) {
+				dir = new_dir;
+				v0 = v1;
+				break;
+			}
+		}
+	}
+	c->area = area;
 }
 
 void
@@ -112,6 +157,8 @@ extract_one_loop(struct vertex *v0, int dir, struct component_head *storage)
 		if (!u)	croakx(1, "extract_one_loop: cannot decide where to go from (%d,%d)\"%c\" -> %s",
 					   v->y, v->x, v->c, DIR[dir]);
 	}
+	calculate_loop_area(c);
+	printf("loop area = %d\n", c->area);
 }
 
 void

@@ -97,6 +97,7 @@ struct component
 	TAILQ_ENTRY(component) list;
 	int type;
 	int dashed;
+	int area;
 	struct vertex_head vertices;
 };
 TAILQ_HEAD(component_head, component);
