@@ -201,15 +201,42 @@ extract_loops(struct component *o, struct component_head *storage)
 void
 extract_one_branch(struct vertex *u, struct component_head *storage)
 {
-	struct vertex *v, *u_, *v_;
+	struct vertex *v = NULL, *u_, *v_;
 	struct component *c;
+	int dir, branch_dir, cnt;
 
-	v = NULL;
-	u_ = NULL;
-	v_ = NULL;
-	c = NULL;
-	if (v && u_ && v_ && c) exit(66);
-	exit(42);
+	c = create_component(storage);
+	u_ = add_vertex_to_component(c, u->y, u->x, u->c);
+
+	printf("==BRANCH\n");
+
+	while (1) {
+		cnt = 0;
+		for (dir = COMPASS_FIRST; dir <= COMPASS_LAST; dir++)
+			if (u->e[dir]) {
+				cnt++;
+				v = u->e[dir];
+				branch_dir = dir;
+			}
+
+		if (cnt == 1) {
+			v_ = add_vertex_to_component(c, v->y, v->x, v->c);
+
+			printf("coming from (%d,%d) to (%d,%d) due %s\n",
+				   u->y, u->x, v->y, v->x, DIR[branch_dir]);
+
+			connect_vertices(u_, v_);
+
+			u->e[branch_dir] = NULL;
+			v->e[(branch_dir + 2) % N_DIRECTIONS] = NULL;
+
+			u = v;
+			u_ = v_;
+			continue;
+		}
+
+		break;
+	}
 }
 
 void
@@ -217,6 +244,7 @@ extract_branches(struct component *o, struct component_head *storage)
 {
 	struct vertex *v, *v_tmp;
 	struct component_head tmp;
+	struct component *c, *c_tmp;
 	int dir;
 
 	TAILQ_INIT(&tmp);
@@ -237,6 +265,12 @@ again:
 
 		if (cnt == 0)
 			TAILQ_REMOVE(&o->vertices, v, list);
+	}
+
+	TAILQ_FOREACH_SAFE(c, &tmp, list, c_tmp) {
+		TAILQ_REMOVE(&tmp, c, list);
+		c->type = CT_LINE;
+		TAILQ_INSERT_TAIL(storage, c, list);
 	}
 }
 
