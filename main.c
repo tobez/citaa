@@ -198,6 +198,48 @@ extract_loops(struct component *o, struct component_head *storage)
 	}
 }
 
+void
+extract_one_branch(struct vertex *u, struct component_head *storage)
+{
+	struct vertex *v, *u_, *v_;
+	struct component *c;
+
+	v = NULL;
+	u_ = NULL;
+	v_ = NULL;
+	c = NULL;
+	if (v && u_ && v_ && c) exit(66);
+	exit(42);
+}
+
+void
+extract_branches(struct component *o, struct component_head *storage)
+{
+	struct vertex *v, *v_tmp;
+	struct component_head tmp;
+	int dir;
+
+	TAILQ_INIT(&tmp);
+
+again:
+	TAILQ_FOREACH_SAFE(v, &o->vertices, list, v_tmp) {
+		int cnt = 0;
+
+		for (dir = COMPASS_FIRST; dir <= COMPASS_LAST; dir++)
+			if (v->e[dir])
+				cnt++;
+
+		if (cnt == 1) {
+			extract_one_branch(v, &tmp);
+			TAILQ_REMOVE(&o->vertices, v, list);
+			goto again;
+		}
+
+		if (cnt == 0)
+			TAILQ_REMOVE(&o->vertices, v, list);
+	}
+}
+
 int
 main(int argc, char **argv)
 {
@@ -223,7 +265,7 @@ main(int argc, char **argv)
 	TAILQ_INIT(&components);
 	TAILQ_FOREACH(c, &connected_components, list) {
 		compactify_component(c);
-		// extract_branches(c, &components);
+		extract_branches(c, &components);
 		extract_loops(c, &components);
 	}
 	TAILQ_FOREACH(c, &components, list) {
