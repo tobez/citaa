@@ -320,6 +320,32 @@ sort_components(struct component_head *storage)
 	free(all);
 }
 
+struct component_head **components_by_point;
+
+void
+build_components_by_point(struct component_head *storage, int h, int w)
+{
+	struct component *c;
+	struct vertex *v;
+	int x, y;
+
+	components_by_point = malloc(sizeof(struct component_head *)*h);
+	if (!components_by_point)	croak(1, "build_components_by_point:malloc(components_by_point)");
+	for (y = 0; y < h; y++) {
+		components_by_point[y] = malloc(sizeof(struct component_head)*w);
+		if (!components_by_point[y])
+			croak(1, "build_components_by_point:malloc(components_by_point[%d])", y);
+		for (x = 0; x < w; x++)
+			TAILQ_INIT(&components_by_point[y][x]);
+	}
+
+	TAILQ_FOREACH(c, storage, list) {
+		TAILQ_FOREACH(v, &c->vertices, list) {
+			TAILQ_INSERT_TAIL(&components_by_point[v->y][v->x], c, list_by_point);
+		}
+	}
+}
+
 int
 main(int argc, char **argv)
 {
@@ -349,6 +375,7 @@ main(int argc, char **argv)
 		extract_loops(c, &components);
 	}
 	sort_components(&components);
+	build_components_by_point(&components, orig->h, orig->w);
 	TAILQ_FOREACH(c, &components, list) {
 		dump_component(c);
 	}

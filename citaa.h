@@ -96,6 +96,7 @@ struct vertex
 struct component
 {
 	TAILQ_ENTRY(component) list;
+	TAILQ_ENTRY(component) list_by_point;
 	int type;
 	int dashed;
 	int area;
@@ -104,6 +105,7 @@ struct component
 TAILQ_HEAD(component_head, component);
 
 extern struct component_head connected_components;
+extern struct component_head **components_by_point;
 
 void free_lag( PLAG lag);
 PLAG build_lag( struct image *im, CHAR c);
