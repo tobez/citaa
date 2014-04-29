@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+#include <ctype.h>
 
 #include "citaa.h"
 #include "bsdqueue.h"
@@ -434,6 +435,108 @@ find_enclosing_component(struct component_head *components, int y, int x)
 }
 
 int
+is_color(CHAR *color, struct rgb *rgb)
+{
+	if (strlen(color) != 4 || color[0] != 'c')
+		return 0;
+
+	if (strcmp(color, "cRED") == 0) {
+		rgb->r = 0xE;
+		rgb->g = 0x3;
+		rgb->b = 0x2;
+		return 1;
+	}
+	if (strcmp(color, "cBLU") == 0) {
+		rgb->r = 0x5;
+		rgb->g = 0x5;
+		rgb->b = 0xB;
+		return 1;
+	}
+	if (strcmp(color, "cGRE") == 0) {
+		rgb->r = 0x9;
+		rgb->g = 0xD;
+		rgb->b = 0x9;
+		return 1;
+	}
+	if (strcmp(color, "cPNK") == 0) {
+		rgb->r = 0xF;
+		rgb->g = 0xA;
+		rgb->b = 0xA;
+		return 1;
+	}
+	if (strcmp(color, "cBLK") == 0) {
+		rgb->r = 0x0;
+		rgb->g = 0x0;
+		rgb->b = 0x0;
+		return 1;
+	}
+	if (strcmp(color, "cYEL") == 0) {
+		rgb->r = 0xF;
+		rgb->g = 0xF;
+		rgb->b = 0x3;
+		return 1;
+	}
+	if (!isxdigit(color[1]))	return 0;
+	if (!isxdigit(color[2]))	return 0;
+	if (!isxdigit(color[3]))	return 0;
+
+	if (isdigit(color[1]))
+		rgb->r = color[1] - '0';
+	else if (color[1] >= 'a')
+		rgb->r = color[1] - 'a' + 10;
+	else
+		rgb->r = color[1] - 'A' + 10;
+
+	if (isdigit(color[2]))
+		rgb->g = color[2] - '0';
+	else if (color[2] >= 'a')
+		rgb->g = color[2] - 'a' + 10;
+	else
+		rgb->g = color[2] - 'A' + 10;
+
+	if (isdigit(color[3]))
+		rgb->b = color[3] - '0';
+	else if (color[3] >= 'a')
+		rgb->b = color[3] - 'a' + 10;
+	else
+		rgb->b = color[3] - 'A' + 10;
+
+	return 1;
+}
+
+void
+extract_text(struct image *img)
+{
+	int y, x, sx;
+	CHAR *buf, *s;
+	CHAR *special_chars = "|:-=V^<>/\\+* ";
+	struct rgb rgb;
+	struct component *c;
+
+	buf = malloc(sizeof(CHAR)*img->w);
+	if (!buf)	croak(1, "extract_text:malloc(buf)");
+
+	for (y = 0; y < img->h; y++) {
+		for (x = 0; x < img->w; x++) {
+			s = buf;
+			sx = x;
+			while (!strchr(special_chars, img->d[y][x]) && x < img->w) {
+				*s++ = img->d[y][x++];
+			}
+			*s = '\0';
+			if (s != buf) {
+				printf("%d,%d: |%s|\n", y, sx, buf);
+				if (is_color(buf, &rgb) &&
+					(c = find_enclosing_component(&components, y, sx)))
+				{
+					printf("COLOR %x%x%x\n", rgb.r, rgb.g, rgb.b);
+				}
+			}
+		}
+	}
+}
+
+int
 main(int argc, char **argv)
 {
 	struct image *orig, *blob, *no_holes, *eroded, *dilated, *status;
@@ -464,11 +567,14 @@ main(int argc, char **argv)
 	sort_components(&components);
 	build_components_by_point(&components, orig->h, orig->w);
 	determine_dashed_components(&components, orig);
+
 	TAILQ_FOREACH(c, &components, list) {
 		dump_component(c);
 	}
 
-	{
+	extract_text(orig);
+
+	if (0) {
 		find_enclosing_component(&components, 1, 2);
 		find_enclosing_component(&components, 4, 6);
 		find_enclosing_component(&components, 4, 5);

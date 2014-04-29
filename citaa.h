@@ -104,6 +104,13 @@ struct component
 };
 TAILQ_HEAD(component_head, component);
 
+struct rgb
+{
+	int r;
+	int g;
+	int b;
+};
+
 extern struct component_head connected_components;
 extern struct component_head **components_by_point;
 
