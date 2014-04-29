@@ -9,3 +9,7 @@
 - actual painting
 - output type from file extension and/or command line parameter
 - PNG, SVG, EPS, PDF
+
+- UTF-8 support
+- support for pseudographical symbols
+  (see what jconsole produces for boxed data types)
