@@ -10,6 +10,9 @@
 - output type from file extension and/or command line parameter
 - PNG, SVG, EPS, PDF
 
+- debug output control via environment vars
+	- CITAA_DEBUG_TRACE=1  etc etc
+
 - UTF-8 support
 - support for pseudographical symbols
   (see what jconsole produces for boxed data types)
