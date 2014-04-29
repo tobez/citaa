@@ -26,7 +26,7 @@ trace_maybe_loop(CHAR ch, struct component *c, struct vertex *v, int y, int x, C
 
 /* To the SOUTH there can be:
  *   '|'  - continuation of the trace
- *   ':'  - continuation of the trace, turn on dashes
+ *   ':'  - continuation of the trace, dashed
  *   'V'  - arrow end
  *   '/'  - turn west
  *   '\'  - turn east
@@ -47,9 +47,8 @@ trace_south(struct image *img, struct image *status, struct component *c, struct
 	if (status->d[y][x] != ST_EMPTY)   return trace_maybe_loop(ch, c, v, y, x, "|:V/\\+*");
 
 	switch (ch) {
-	case ':':
-		c->dashed = 1;
 	case '|':
+	case ':':
 		status->d[y][x] = seen;
 		u = add_vertex_to_component(c, y, x, ch);
 		connect_vertices(v, u);
@@ -92,7 +91,7 @@ trace_south(struct image *img, struct image *status, struct component *c, struct
 
 /* To the NORTH there can be:
  *   '|'  - continuation of the trace
- *   ':'  - continuation of the trace, turn on dashes
+ *   ':'  - continuation of the trace, dashed
  *   '^'  - arrow end
  *   '/'  - turn east
  *   '\'  - turn west
@@ -113,9 +112,8 @@ trace_north(struct image *img, struct image *status, struct component *c, struct
 	if (status->d[y][x] != ST_EMPTY)   return trace_maybe_loop(ch, c, v, y, x, "|:^/\\+*");
 
 	switch (ch) {
-	case ':':
-		c->dashed = 1;
 	case '|':
+	case ':':
 		status->d[y][x] = seen;
 		u = add_vertex_to_component(c, y, x, ch);
 		connect_vertices(v, u);
@@ -158,7 +156,7 @@ trace_north(struct image *img, struct image *status, struct component *c, struct
 
 /* To the EAST there can be:
  *   '-'  - continuation of the trace
- *   '='  - continuation of the trace, turn on dashes
+ *   '='  - continuation of the trace, dashed
  *   '>'  - arrow end
  *   '/'  - turn north
  *   '\'  - turn south
@@ -179,9 +177,8 @@ trace_east(struct image *img, struct image *status, struct component *c, struct 
 	if (status->d[y][x] != ST_EMPTY)   return trace_maybe_loop(ch, c, v, y, x, "-=>/\\+*");
 
 	switch (ch) {
-	case '=':
-		c->dashed = 1;
 	case '-':
+	case '=':
 		status->d[y][x] = seen;
 		u = add_vertex_to_component(c, y, x, ch);
 		connect_vertices(v, u);
@@ -224,7 +221,7 @@ trace_east(struct image *img, struct image *status, struct component *c, struct 
 
 /* To the WEST there can be:
  *   '-'  - continuation of the trace
- *   '='  - continuation of the trace, turn on dashes
+ *   '='  - continuation of the trace, dashed
  *   '<'  - arrow end
  *   '/'  - turn south
  *   '\'  - turn north
@@ -245,9 +242,8 @@ trace_west(struct image *img, struct image *status, struct component *c, struct 
 	if (status->d[y][x] != ST_EMPTY)   return trace_maybe_loop(ch, c, v, y, x, "-=</\\+*");
 
 	switch (ch) {
-	case '=':
-		c->dashed = 1;
 	case '-':
+	case '=':
 		status->d[y][x] = seen;
 		u = add_vertex_to_component(c, y, x, ch);
 		connect_vertices(v, u);
