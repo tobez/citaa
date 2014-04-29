@@ -1,0 +1,11 @@
+- retrace components to find dashes
+- find component enclosing a point, if any
+- text extraction, textual attributes of boxes, colors/shapes
+- datastructure hash or tree by coordinate
+	- store "this was drawn already" flag - for "*" and maybe for something else
+- finding shared edges to make adjustments for the line drawn
+- experiment with shapes for non-rectangular cycles - what ditaa does?
+- painting parameters/schema
+- actual painting
+- output type from file extension and/or command line parameter
+- PNG, SVG, EPS, PDF
