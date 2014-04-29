@@ -346,6 +346,50 @@ build_components_by_point(struct component_head *storage, int h, int w)
 	}
 }
 
+void
+determine_dashed_components(struct component_head *storage, struct image *img)
+{
+	struct component *c, *connected;
+	struct vertex *u, *v;
+	int x, y;
+
+	TAILQ_FOREACH(c, storage, list) {
+		printf("====\n");
+		TAILQ_FOREACH(u, &c->vertices, list) {
+			if ((v = u->e[EAST])) {
+				y = u->y;
+				for (x = u->x; x <= v->x; x++) {
+					if (img->d[y][x] == '=') {
+						c->dashed = 1;
+						break;
+					}
+				}
+			}
+			if (c->dashed)
+				break;
+			if ((v = u->e[SOUTH])) {
+				x = u->x;
+				for (y = u->y; y <= v->y; y++) {
+					if (img->d[y][x] == ':') {
+						c->dashed = 1;
+						break;
+					}
+				}
+			}
+			if (c->dashed)
+				break;
+		}
+		if (c->dashed && c->type == CT_LINE) {
+			/* Propagate dashed status for all connected branches */
+			TAILQ_FOREACH(v, &c->vertices, list) {
+				TAILQ_FOREACH(connected, &components_by_point[v->y][v->x], list_by_point)
+					if (connected->type == CT_LINE)
+						connected->dashed = 1;
+			}
+		}
+	}
+}
+
 int
 main(int argc, char **argv)
 {
@@ -376,6 +420,7 @@ main(int argc, char **argv)
 	}
 	sort_components(&components);
 	build_components_by_point(&components, orig->h, orig->w);
+	determine_dashed_components(&components, orig);
 	TAILQ_FOREACH(c, &components, list) {
 		dump_component(c);
 	}

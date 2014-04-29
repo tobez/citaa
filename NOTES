@@ -1,5 +1,3 @@
-- retrace components to find dashes
-- connected branches should probably have the same "dashed" status
 - find component enclosing a point, if any
 - text extraction, textual attributes of boxes, colors/shapes
 - datastructure hash or tree by coordinate
