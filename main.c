@@ -17,11 +17,17 @@ void
 dump_component(struct component *c)
 {
 	struct vertex *v;
+	char *dashed = "";
 
+	if (c->dashed)	dashed = ", dashed";
 	if (c->type == CT_BOX)
-		printf("%s component, area %d\n", COMPONENT_TYPE[c->type], c->area);
+		printf("%s component, area %d%s\n",
+			   COMPONENT_TYPE[c->type], c->area,
+			   dashed);
 	else
-		printf("%s component\n", COMPONENT_TYPE[c->type]);
+		printf("%s component%s\n",
+			   COMPONENT_TYPE[c->type],
+			   dashed);
 	TAILQ_FOREACH(v, &c->vertices, list) {
 		dump_vertex(v);
 	}
@@ -274,6 +280,46 @@ again:
 	}
 }
 
+static int
+func_component_compare(const void *ap, const void *bp)
+{
+	const struct component *a = *(const struct component **)ap;
+	const struct component *b = *(const struct component **)bp;
+	int cp;
+
+	cp = b->area - a->area;
+	if (cp)	return cp;
+
+	if (ap < bp)	return -1;
+	if (ap > bp)	return 1;
+	return 0;
+}
+
+void
+sort_components(struct component_head *storage)
+{
+	struct component *c, **all, *c_tmp;
+	int cnt = 0, i = 0;
+
+	TAILQ_FOREACH(c, storage, list) {
+		cnt++;
+	}
+
+	all = malloc(sizeof(c) * cnt);
+	if (!all) croak(1, "sort_components:malloc(all)");
+
+	TAILQ_FOREACH_SAFE(c, storage, list, c_tmp) {
+		all[i++] = c;
+		TAILQ_REMOVE(storage, c, list);
+	}
+
+	qsort(all, cnt, sizeof(c), func_component_compare);
+
+	for (i = 0; i < cnt; i++)
+		TAILQ_INSERT_TAIL(storage, all[i], list);
+	free(all);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -302,6 +348,7 @@ main(int argc, char **argv)
 		extract_branches(c, &components);
 		extract_loops(c, &components);
 	}
+	sort_components(&components);
 	TAILQ_FOREACH(c, &components, list) {
 		dump_component(c);
 	}
