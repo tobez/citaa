@@ -390,6 +390,49 @@ determine_dashed_components(struct component_head *storage, struct image *img)
 	}
 }
 
+struct component *
+find_enclosing_component(struct component_head *components, int y, int x)
+{
+	struct component *c;
+	struct vertex *u, *v;
+	int cnt;
+
+	TAILQ_FOREACH_REVERSE(c, components, component_head, list) {
+		if (c->type != CT_BOX)	continue;
+
+		cnt = 0;
+
+		TAILQ_FOREACH(u, &c->vertices, list) {
+			if ((v = u->e[SOUTH])) {
+				if (u->x == x && y >= u->y && y <= v->y) {
+					/* point ON the edge, consider it to be inside */
+					cnt = 1;
+					break;
+				}
+
+				if (x < u->x && y >= u->y && y < v->y)
+					cnt++;
+			}
+
+			if ((v = u->e[EAST])) {
+				if (u->y == y && x >= u->x && x <= v->x) {
+					/* point ON the edge, consider it to be inside */
+					cnt = 1;
+					break;
+				}
+			}
+		}
+
+		if (cnt % 2 == 1) {
+			printf("Point %d,%d is inside the following component:\n", y, x);
+			dump_component(c);
+			return c;
+		}
+	}
+	printf("Point %d,%d is outside of everything\n", y, x);
+	return NULL;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -423,6 +466,21 @@ main(int argc, char **argv)
 	determine_dashed_components(&components, orig);
 	TAILQ_FOREACH(c, &components, list) {
 		dump_component(c);
+	}
+
+	{
+		find_enclosing_component(&components, 1, 2);
+		find_enclosing_component(&components, 4, 6);
+		find_enclosing_component(&components, 4, 5);
+		find_enclosing_component(&components, 3, 5);
+		find_enclosing_component(&components, 3, 6);
+		find_enclosing_component(&components, 2, 20);
+		find_enclosing_component(&components, 2, 0);
+		find_enclosing_component(&components, 6, 0);
+		find_enclosing_component(&components, 6, 1);
+		find_enclosing_component(&components, 6, 5);
+		find_enclosing_component(&components, 6, 10);
+		find_enclosing_component(&components, 7, 2);
 	}
 
 	return 0;
