@@ -93,23 +93,29 @@ struct vertex
 	struct vertex *e[4];  /* edges in four directions */
 };
 
-struct component
-{
-	TAILQ_ENTRY(component) list;
-	TAILQ_ENTRY(component) list_by_point;
-	int type;
-	int dashed;
-	int area;
-	struct vertex_head vertices;
-};
-TAILQ_HEAD(component_head, component);
-
 struct rgb
 {
 	int r;
 	int g;
 	int b;
 };
+
+struct component
+{
+	TAILQ_ENTRY(component) list;
+	TAILQ_ENTRY(component) list_by_point;
+
+	int type;
+	int dashed;
+	int area;
+
+	int has_custom_background;
+	struct rgb custom_background;
+	int white_text;
+
+	struct vertex_head vertices;
+};
+TAILQ_HEAD(component_head, component);
 
 extern struct component_head connected_components;
 extern struct component_head **components_by_point;

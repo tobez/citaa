@@ -19,16 +19,28 @@ dump_component(struct component *c)
 {
 	struct vertex *v;
 	char *dashed = "";
+	char color[256];
+	char *white_text = "";
+
+	color[0] = '\0';
 
 	if (c->dashed)	dashed = ", dashed";
+	if (c->has_custom_background) {
+		snprintf(color, 256, ", color %x%x%x",
+				 c->custom_background.r,
+				 c->custom_background.g,
+				 c->custom_background.b);
+	}
+	if (c->white_text)	white_text = ", white text";
+
 	if (c->type == CT_BOX)
-		printf("%s component, area %d%s\n",
+		printf("%s component, area %d%s%s%s\n",
 			   COMPONENT_TYPE[c->type], c->area,
-			   dashed);
+			   dashed, color, white_text);
 	else
-		printf("%s component%s\n",
+		printf("%s component%s%s%s\n",
 			   COMPONENT_TYPE[c->type],
-			   dashed);
+			   dashed, color, white_text);
 	TAILQ_FOREACH(v, &c->vertices, list) {
 		dump_vertex(v);
 	}
@@ -78,6 +90,10 @@ create_component(struct component_head *storage)
 	c->type = CT_UNKNOWN;
 	c->dashed = 0;
 	c->area = 0;
+
+	c->has_custom_background = 0;
+	c->white_text = 0;
+
 	TAILQ_INIT(&c->vertices);
 
 	if (storage)
@@ -529,6 +545,12 @@ extract_text(struct image *img)
 				if (is_color(buf, &rgb) &&
 					(c = find_enclosing_component(&components, y, sx)))
 				{
+					double perceptive_luminance = 1 - ( 0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b)/0xF;
+
+					c->has_custom_background = 1;
+					c->custom_background = rgb;
+					if (perceptive_luminance >= 0.5)
+						c->white_text = 1;
 					printf("COLOR %x%x%x\n", rgb.r, rgb.g, rgb.b);
 				}
 			}
@@ -568,11 +590,11 @@ main(int argc, char **argv)
 	build_components_by_point(&components, orig->h, orig->w);
 	determine_dashed_components(&components, orig);
 
+	extract_text(orig);
+
 	TAILQ_FOREACH(c, &components, list) {
 		dump_component(c);
 	}
-
-	extract_text(orig);
 
 	if (0) {
 		find_enclosing_component(&components, 1, 2);
