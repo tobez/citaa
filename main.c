@@ -561,6 +561,7 @@ extract_text(struct image *img)
 	struct rgb rgb;
 	struct component *c;
 	int shape;
+	struct text *t;
 
 	buf = malloc(sizeof(CHAR)*img->w);
 	if (!buf)	croak(1, "extract_text:malloc(buf)");
@@ -575,24 +576,25 @@ extract_text(struct image *img)
 			*s = '\0';
 			if (s != buf) {
 				printf("%d,%d: |%s|\n", y, sx, buf);
-				if (is_color(buf, &rgb) &&
-					(c = find_enclosing_component(&components, y, sx)))
-				{
-					double perceptive_luminance = 1 - ( 0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b)/0xF;
+				c = find_enclosing_component(&components, y, sx);
+				if (is_color(buf, &rgb) && c) {
+					double percepted_luminance = 1 - ( 0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b)/0xF;
 
 					c->has_custom_background = 1;
 					c->custom_background = rgb;
-					if (perceptive_luminance >= 0.5)
+					if (percepted_luminance >= 0.5)
 						c->white_text = 1;
 					printf("COLOR %x%x%x\n", rgb.r, rgb.g, rgb.b);
-				} else if (is_shape(buf, &shape) &&
-					(c = find_enclosing_component(&components, y, sx)))
-				{
+				} else if (is_shape(buf, &shape) && c) {
 					c->shape = shape;
+				} else {
+					t = create_text(y, sx, buf);
+					TAILQ_INSERT_TAIL(c ? &c->text : &free_text, t, list);
 				}
 			}
 		}
 	}
+	free(buf);
 }
 
 int
