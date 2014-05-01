@@ -21,6 +21,7 @@ dump_component(struct component *c)
 	char *dashed = "";
 	char color[256];
 	char *white_text = "";
+	char *shape_text = "";
 
 	color[0] = '\0';
 
@@ -32,15 +33,26 @@ dump_component(struct component *c)
 				 c->custom_background.b);
 	}
 	if (c->white_text)	white_text = ", white text";
+	switch (c->shape) {
+	case SHAPE_DOCUMENT:
+		shape_text = ", document";
+		break;
+	case SHAPE_STORAGE:
+		shape_text = ", storage";
+		break;
+	case SHAPE_IO:
+		shape_text = ", I/O box";
+		break;
+	}
 
 	if (c->type == CT_BOX)
-		printf("%s component, area %d%s%s%s\n",
+		printf("%s component, area %d%s%s%s%s\n",
 			   COMPONENT_TYPE[c->type], c->area,
-			   dashed, color, white_text);
+			   dashed, color, white_text, shape_text);
 	else
-		printf("%s component%s%s%s\n",
+		printf("%s component%s%s%s%s\n",
 			   COMPONENT_TYPE[c->type],
-			   dashed, color, white_text);
+			   dashed, color, white_text, shape_text);
 	TAILQ_FOREACH(v, &c->vertices, list) {
 		dump_vertex(v);
 	}
@@ -93,6 +105,7 @@ create_component(struct component_head *storage)
 
 	c->has_custom_background = 0;
 	c->white_text = 0;
+	c->shape = SHAPE_NORMAL;
 
 	TAILQ_INIT(&c->vertices);
 
@@ -520,6 +533,25 @@ is_color(CHAR *color, struct rgb *rgb)
 	return 1;
 }
 
+int
+is_shape(CHAR *shape_name, int *shape)
+{
+	if (strcmp(shape_name, "{d}") == 0) {
+		*shape = SHAPE_DOCUMENT;
+		return 1;
+	}
+	if (strcmp(shape_name, "{s}") == 0) {
+		*shape = SHAPE_STORAGE;
+		return 1;
+	}
+	if (strcmp(shape_name, "{io}") == 0) {
+		*shape = SHAPE_IO;
+		return 1;
+	}
+
+	return 0;
+}
+
 void
 extract_text(struct image *img)
 {
@@ -528,6 +560,7 @@ extract_text(struct image *img)
 	CHAR *special_chars = "|:-=V^<>/\\+* ";
 	struct rgb rgb;
 	struct component *c;
+	int shape;
 
 	buf = malloc(sizeof(CHAR)*img->w);
 	if (!buf)	croak(1, "extract_text:malloc(buf)");
@@ -552,6 +585,10 @@ extract_text(struct image *img)
 					if (perceptive_luminance >= 0.5)
 						c->white_text = 1;
 					printf("COLOR %x%x%x\n", rgb.r, rgb.g, rgb.b);
+				} else if (is_shape(buf, &shape) &&
+					(c = find_enclosing_component(&components, y, sx)))
+				{
+					c->shape = shape;
 				}
 			}
 		}

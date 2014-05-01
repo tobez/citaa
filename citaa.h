@@ -19,6 +19,11 @@
 #define CT_LINE    1
 #define CT_BOX     2
 
+#define SHAPE_NORMAL   0
+#define SHAPE_DOCUMENT 1
+#define SHAPE_STORAGE  2
+#define SHAPE_IO       3
+
 typedef char CHAR;
 
 extern CHAR seen;
@@ -112,6 +117,7 @@ struct component
 	int has_custom_background;
 	struct rgb custom_background;
 	int white_text;
+	int shape;
 
 	struct vertex_head vertices;
 };
