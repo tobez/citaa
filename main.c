@@ -108,6 +108,7 @@ create_component(struct component_head *storage)
 	c->shape = SHAPE_NORMAL;
 
 	TAILQ_INIT(&c->vertices);
+	TAILQ_INIT(&c->text);
 
 	if (storage)
 		TAILQ_INSERT_TAIL(storage, c, list);
@@ -597,12 +598,33 @@ extract_text(struct image *img)
 	free(buf);
 }
 
+struct text_head free_text;
+
+struct text *
+create_text(int y, int x, CHAR *text)
+{
+	struct text *t = malloc(sizeof(struct text));
+	if (!t) croak(1, "create_text:malloc(text)");
+
+	t->y = y;
+	t->x = x;
+	t->len = strlen(text);
+
+	t->t = malloc(sizeof(CHAR) * (t->len+1));
+	if (!t->t) croak(1, "create_text:malloc(t->t)");
+	strcpy(t->t, text);
+
+	return t;
+}
+
 int
 main(int argc, char **argv)
 {
 	struct image *orig, *blob, *no_holes, *eroded, *dilated, *status;
 	struct component *c;
 	int x, y, i;
+
+	TAILQ_INIT(&free_text);
 
 	orig = read_image(stdin);
 

@@ -105,6 +105,17 @@ struct rgb
 	int b;
 };
 
+TAILQ_HEAD(text_head, text);
+
+struct text
+{
+	TAILQ_ENTRY(text) list;
+	int x, y;
+	int len;
+	CHAR *t;
+};
+extern struct text_head free_text;
+
 struct component
 {
 	TAILQ_ENTRY(component) list;
@@ -120,6 +131,7 @@ struct component
 	int shape;
 
 	struct vertex_head vertices;
+	struct text_head text;
 };
 TAILQ_HEAD(component_head, component);
 
@@ -140,5 +152,6 @@ void dump_vertex(struct vertex *v);
 struct vertex *find_vertex_in_component(struct component *c, int y, int x);
 void trace_component(struct image *img, struct image *status, struct component *c, int y, int x);
 struct component *create_component(struct component_head *storage);
+struct text *create_text(int y, int x, CHAR *text);
 
 #endif
