@@ -649,14 +649,15 @@ struct paint_context {
 	int o_y;
 };
 
-#define pcx(x) pc->o_x + x * pc->s->xscale
-#define pcy(y) pc->o_y + y * pc->s->yscale
+#define pcx(x) pc->o_x + (x) * pc->s->xscale
+#define pcy(y) pc->o_y + (y) * pc->s->yscale
 
 void
 paint_box(struct paint_context *pc, struct component *c)
 {
 	struct vertex *v0, *start, *v1;
 	int i, dir, new_dir;
+	int min_x = INT_MAX, min_y = INT_MAX;
 
 	cairo_set_line_width(pc->cr, 1);
 	cairo_set_line_cap(pc->cr, CAIRO_LINE_CAP_ROUND);
@@ -670,6 +671,9 @@ paint_box(struct paint_context *pc, struct component *c)
 		if (v0->e[dir])	break;
 
 	while (1) {
+		if (v0->x < min_x) min_x = v0->x;
+		if (v0->y < min_y) min_y = v0->y;
+
 		v1 = v0->e[dir];
 
 		cairo_line_to(pc->cr, pcx(v1->x), pcy(v1->y));
@@ -686,6 +690,7 @@ paint_box(struct paint_context *pc, struct component *c)
 		}
 	}
 
+	cairo_close_path(pc->cr);
 	cairo_stroke_preserve(pc->cr);
 	if (c->has_custom_background)
 		cairo_set_source_rgb(pc->cr,
@@ -695,6 +700,18 @@ paint_box(struct paint_context *pc, struct component *c)
 	else
 		cairo_set_source_rgb(pc->cr, 1, 1, 1);
 	cairo_fill(pc->cr);
+
+	{
+	static int boxn = 0;
+	char t[40];
+	boxn++;
+	snprintf(t, 40, "%d", boxn);
+	cairo_set_source_rgb(pc->cr, 0, 0, 0);
+	cairo_select_font_face(pc->cr, "DejaVu", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+	cairo_set_font_size(pc->cr, 12);
+	cairo_move_to(pc->cr, pcx(min_x+1), pcy(min_y+1));  
+	  cairo_show_text(pc->cr, t);
+	}
 }
 
 void
