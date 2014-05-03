@@ -1,7 +1,7 @@
 OPTIMIZE?=-O2 -g
 CFLAGS?=-Wall -Werror -fno-strict-aliasing
-CAIRO_CFLAGS != pkg-config --cflags gtk+-3.0
-CAIRO_LFLAGS != pkg-config --libs gtk+-3.0
+CAIRO_CFLAGS = `pkg-config --cflags gtk+-2.0`
+CAIRO_LFLAGS = `pkg-config --libs gtk+-2.0`
 CC?=cc
 
 citaa: main.o carp.o read.o image.o graph.o trace.o
