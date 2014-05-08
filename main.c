@@ -628,6 +628,7 @@ struct schema {
 	int border_bottom;
 	double fuzz_x;
 	double fuzz_y;
+	double dash_spec[2];
 } default_paint_schema = {
 	.xscale = 10,
 	.yscale = 14,
@@ -637,6 +638,7 @@ struct schema {
 	.border_bottom = 28,
 	.fuzz_x = 0.5,
 	.fuzz_y = 0.5,
+	.dash_spec = { 6.0, 4.0 },
 };
 
 struct paint_context {
@@ -666,6 +668,11 @@ paint_box(struct paint_context *pc, struct component *c)
 	cairo_set_line_width(pc->cr, 1);
 	cairo_set_line_cap(pc->cr, CAIRO_LINE_CAP_ROUND);
 	cairo_set_source_rgb(pc->cr, 0, 0, 0);
+
+	if (c->dashed)
+		cairo_set_dash(pc->cr, pc->s->dash_spec, 2, 0);
+	else
+		cairo_set_dash(pc->cr, NULL, 0, 0);
 
 	start = TAILQ_FIRST(&c->vertices);
 	cairo_move_to(pc->cr, pcx(start->x), pcy(start->y));
