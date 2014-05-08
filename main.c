@@ -649,8 +649,8 @@ struct paint_context {
 	int o_y;
 };
 
-#define pcx(x) pc->o_x + (x) * pc->s->xscale
-#define pcy(y) pc->o_y + (y) * pc->s->yscale
+#define pcx(x) pc->o_x + (x) * pc->s->xscale + 0.5
+#define pcy(y) pc->o_y + (y) * pc->s->yscale + 0.5
 
 void
 paint_box(struct paint_context *pc, struct component *c)
