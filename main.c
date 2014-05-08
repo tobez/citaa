@@ -626,6 +626,8 @@ struct schema {
 	int border_right;
 	int border_top;
 	int border_bottom;
+	double fuzz_x;
+	double fuzz_y;
 } default_paint_schema = {
 	.xscale = 10,
 	.yscale = 14,
@@ -633,6 +635,8 @@ struct schema {
 	.border_right = 20,
 	.border_top = 28,
 	.border_bottom = 28,
+	.fuzz_x = 0.5,
+	.fuzz_y = 0.5,
 };
 
 struct paint_context {
@@ -649,8 +653,8 @@ struct paint_context {
 	int o_y;
 };
 
-#define pcx(x) pc->o_x + (x) * pc->s->xscale + 0.5
-#define pcy(y) pc->o_y + (y) * pc->s->yscale + 0.5
+#define pcx(x) pc->o_x + (x) * pc->s->xscale + pc->s->fuzz_x
+#define pcy(y) pc->o_y + (y) * pc->s->yscale + pc->s->fuzz_y
 
 void
 paint_box(struct paint_context *pc, struct component *c)
