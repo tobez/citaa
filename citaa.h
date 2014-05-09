@@ -137,6 +137,7 @@ TAILQ_HEAD(component_head, component);
 
 extern struct component_head connected_components;
 extern struct component_head **components_by_point;
+extern struct component_head components;
 
 void free_lag( PLAG lag);
 PLAG build_lag( struct image *im, CHAR c);
@@ -153,5 +154,6 @@ struct vertex *find_vertex_in_component(struct component *c, int y, int x);
 void trace_component(struct image *img, struct image *status, struct component *c, int y, int x);
 struct component *create_component(struct component_head *storage);
 struct text *create_text(int y, int x, CHAR *text);
+void paint(int i_height, int i_width);
 
 #endif
