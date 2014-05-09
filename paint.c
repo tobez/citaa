@@ -118,7 +118,7 @@ paint_box(struct paint_context *pc, struct component *c)
 void
 paint_line(struct paint_context *pc, struct component *c)
 {
-	struct vertex *v0, *start, *v1, *v;
+	struct vertex *v0, *start = NULL, *v1, *v;
 	int i, dir, new_dir;
 
 	cairo_set_line_width(pc->cr, 1);
@@ -142,6 +142,7 @@ paint_line(struct paint_context *pc, struct component *c)
 		if (cnt == 1)
 			break;
 	}
+	if (!start) return;
 
 	cairo_move_to(pc->cr, pcx(start->x), pcy(start->y));
 
