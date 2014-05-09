@@ -120,7 +120,7 @@ paint_arrow(struct paint_context *pc, struct vertex *v)
 {
 	int x, y, cx, cy;
 
-	if (!strchr("<>V^", v->c)) return;
+	if (!strchr("<>Vv^", v->c)) return;
 
 	cairo_set_line_width(pc->cr, 1);
 	cairo_set_line_cap(pc->cr, CAIRO_LINE_CAP_ROUND);
@@ -139,6 +139,7 @@ paint_arrow(struct paint_context *pc, struct vertex *v)
 		cairo_line_to(pc->cr, x + cx, y + cy);
 		break;
 	case 'V':
+	case 'v':
 		cairo_move_to(pc->cr, x, y + cy);
 		cairo_line_to(pc->cr, x - cx, y - cy);
 		cairo_line_to(pc->cr, x + cx, y - cy);

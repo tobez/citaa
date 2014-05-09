@@ -101,7 +101,7 @@ extract_text(struct image *img)
 {
 	int y, x, sx;
 	CHAR *buf, *s;
-	CHAR *special_chars = "|:-=V^<>/\\+* ";
+	CHAR *special_chars = "|:-=Vv^<>/\\+* ";
 	struct rgb rgb;
 	struct component *c;
 	int shape;

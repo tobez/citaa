@@ -44,7 +44,7 @@ trace_south(struct image *img, struct image *status, struct component *c, struct
 	if (y < 0 || y >= img->h)          return;
 
 	ch = img->d[y][x];
-	if (status->d[y][x] != ST_EMPTY)   return trace_maybe_loop(ch, c, v, y, x, "|:V/\\+*");
+	if (status->d[y][x] != ST_EMPTY)   return trace_maybe_loop(ch, c, v, y, x, "|:Vv/\\+*");
 
 	switch (ch) {
 	case '|':
@@ -56,6 +56,7 @@ trace_south(struct image *img, struct image *status, struct component *c, struct
 		trace_south(img, status, c, u, y+1, x);
 		break;
 	case 'V':
+	case 'v':
 		status->d[y][x] = seen;
 		u = add_vertex_to_component(c, y, x, ch);
 		connect_vertices(v, u);
