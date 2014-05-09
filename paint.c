@@ -118,6 +118,54 @@ paint_box(struct paint_context *pc, struct component *c)
 void
 paint_line(struct paint_context *pc, struct component *c)
 {
+	struct vertex *v0, *start, *v1, *v;
+	int i, dir, new_dir;
+
+	cairo_set_line_width(pc->cr, 1);
+	cairo_set_line_cap(pc->cr, CAIRO_LINE_CAP_ROUND);
+	cairo_set_source_rgb(pc->cr, 0, 0, 0);
+
+	if (c->dashed)
+		cairo_set_dash(pc->cr, pc->s->dash_spec, 2, 0);
+	else
+		cairo_set_dash(pc->cr, NULL, 0, 0);
+
+	TAILQ_FOREACH(v, &c->vertices, list) {
+		int cnt = 0;
+
+		for (dir = 0; dir < N_DIRECTIONS; dir++) {
+			if (v->e[dir]) {
+				cnt++;
+				start = v;
+			}
+		}
+		if (cnt == 1)
+			break;
+	}
+
+	cairo_move_to(pc->cr, pcx(start->x), pcy(start->y));
+
+	v0 = start;
+	for (dir = 0; dir < N_DIRECTIONS; dir++)
+		if (v0->e[dir])	break;
+
+	while (v0) {
+		v1 = v0->e[dir];
+
+		cairo_line_to(pc->cr, pcx(v1->x), pcy(v1->y));
+
+		v0 = NULL;
+		for (i = 1; i >= -1; i--) {
+			new_dir = (dir + i + 4) % N_DIRECTIONS;
+			if (v1->e[new_dir]) {
+				dir = new_dir;
+				v0 = v1;
+				break;
+			}
+		}
+	}
+
+	cairo_stroke(pc->cr);
 }
 
 void
