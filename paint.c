@@ -92,7 +92,6 @@ paint_box(struct paint_context *pc, struct component *c)
 	}
 
 	cairo_close_path(pc->cr);
-	cairo_stroke_preserve(pc->cr);
 	if (c->has_custom_background)
 		cairo_set_source_rgb(pc->cr,
 							 c->custom_background.r / 15.0,
@@ -100,7 +99,10 @@ paint_box(struct paint_context *pc, struct component *c)
 							 c->custom_background.b / 15.0);
 	else
 		cairo_set_source_rgb(pc->cr, 1, 1, 1);
-	cairo_fill(pc->cr);
+	cairo_fill_preserve(pc->cr);
+
+	cairo_set_source_rgb(pc->cr, 0, 0, 0);
+	cairo_stroke(pc->cr);
 
 	{
 	static int boxn = 0;
