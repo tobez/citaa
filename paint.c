@@ -107,7 +107,10 @@ paint_box(struct paint_context *pc, struct component *c)
 	char t[40];
 	boxn++;
 	snprintf(t, 40, "%d", boxn);
-	cairo_set_source_rgb(pc->cr, 0, 0, 0);
+	if (c->has_custom_background && c->white_text)
+		cairo_set_source_rgb(pc->cr, 1, 1, 1);
+	else
+		cairo_set_source_rgb(pc->cr, 0, 0, 0);
 	cairo_select_font_face(pc->cr, "DejaVu", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
 	cairo_set_font_size(pc->cr, 12);
 	cairo_move_to(pc->cr, pcx(min_x+1), pcy(min_y+1));  
