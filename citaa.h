@@ -113,5 +113,6 @@ void extract_loops(struct component *o, struct component_head *storage);
 void sort_components(struct component_head *storage);
 void build_components_by_point(struct component_head *storage, int h, int w);
 void determine_dashed_components(struct component_head *storage, struct image *img);
+void extract_text(struct image *img);
 
 #endif
