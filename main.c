@@ -620,9 +620,9 @@ create_text(int y, int x, CHAR *text)
 int
 main(int argc, char **argv)
 {
-	struct image *orig, *blob, *no_holes, *eroded, *dilated, *status;
+	struct image *orig, *status;
 	struct component *c;
-	int x, y, i;
+	int x, y;
 
 	TAILQ_INIT(&free_text);
 
@@ -654,48 +654,6 @@ main(int argc, char **argv)
 	extract_text(orig);
 
 	paint(orig->h, orig->w);
-
-	return 0;
-
-	blob = copy_image(orig);
-	for (i = 0; i < blob->h; i++) {
-		CHAR *s = blob->d[i];
-		while (*s) {
-			if (*s == '+' ||
-				*s == '-' ||
-				*s == '|' ||
-				*s == ':' ||
-				*s == '=' ||
-				*s == '*' ||
-				*s == '/' ||
-				*s == '\\' ||
-				*s == '>' ||
-				*s == '<' ||
-				*s == '^' ||
-				*s == 'V')
-			{
-				*s = '+';
-			} else {
-				*s = ' ';
-			}
-			s++;
-		}
-	}
-
-	dump_image("blob", blob);
-
-	// lag = build_lag(blob, '+');
-	// find_lag_components(lag, 1, 1);
-	// dump_lag(lag);
-
-	no_holes = image_fill_holes(blob, 4);
-	dump_image("no holes 4", no_holes);
-
-	eroded = image_erode(no_holes, 8);
-	dump_image("eroded 8", eroded);
-
-	dilated = image_dilate(eroded, 8);
-	dump_image("dilated 8", dilated);
 
 	return 0;
 }
