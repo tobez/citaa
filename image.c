@@ -4,6 +4,16 @@
 
 #include "citaa.h"
 
+void
+dump_image(const char *title, struct image *img)
+{
+	int i;
+	printf("Image dump of \"%s\", size %dx%d\n", title, img->w, img->h);
+	for (i = 0; i < img->h; i++) {
+		printf("%03d: |%s|\n", i, img->d[i]);
+	}
+}
+
 struct image *
 copy_image(struct image *src)
 {

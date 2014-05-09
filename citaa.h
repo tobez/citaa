@@ -106,5 +106,12 @@ void trace_component(struct image *img, struct image *status, struct component *
 struct component *create_component(struct component_head *storage);
 struct text *create_text(int y, int x, CHAR *text);
 void paint(int i_height, int i_width);
+struct component *find_enclosing_component(struct component_head *components, int y, int x);
+void compactify_component(struct component *c);
+void extract_branches(struct component *o, struct component_head *storage);
+void extract_loops(struct component *o, struct component_head *storage);
+void sort_components(struct component_head *storage);
+void build_components_by_point(struct component_head *storage, int h, int w);
+void determine_dashed_components(struct component_head *storage, struct image *img);
 
 #endif
