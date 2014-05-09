@@ -10,8 +10,8 @@
 #include "bsdqueue.h"
 
 struct schema {
-	int xscale;
-	int yscale;
+	int xcell;
+	int ycell;
 	int border_left;
 	int border_right;
 	int border_top;
@@ -20,8 +20,8 @@ struct schema {
 	double fuzz_y;
 	double dash_spec[2];
 } default_paint_schema = {
-	.xscale = 10,
-	.yscale = 14,
+	.xcell = 10,
+	.ycell = 14,
 	.border_left = 20,
 	.border_right = 20,
 	.border_top = 28,
@@ -45,8 +45,8 @@ struct paint_context {
 	int o_y;
 };
 
-#define pcx(x) pc->o_x + (x) * pc->s->xscale + pc->s->fuzz_x
-#define pcy(y) pc->o_y + (y) * pc->s->yscale + pc->s->fuzz_y
+#define pcx(x) pc->o_x + (x) * pc->s->xcell + pc->s->fuzz_x
+#define pcy(y) pc->o_y + (y) * pc->s->ycell + pc->s->fuzz_y
 
 void
 paint_box(struct paint_context *pc, struct component *c)
@@ -116,6 +116,50 @@ paint_box(struct paint_context *pc, struct component *c)
 }
 
 void
+paint_arrow(struct paint_context *pc, struct vertex *v)
+{
+	int x, y, cx, cy;
+
+	if (!strchr("<>V^", v->c)) return;
+
+	cairo_set_line_width(pc->cr, 1);
+	cairo_set_line_cap(pc->cr, CAIRO_LINE_CAP_ROUND);
+	cairo_set_source_rgb(pc->cr, 0, 0, 0);
+	cairo_set_dash(pc->cr, NULL, 0, 0);
+
+	x = pcx(v->x);
+	y = pcy(v->y);
+	cx = pc->s->xcell / 2;
+	cy = pc->s->ycell / 2;
+
+	switch (v->c) {
+	case '^':
+		cairo_move_to(pc->cr, x, y - cx);
+		cairo_line_to(pc->cr, x - cx, y + cy);
+		cairo_line_to(pc->cr, x + cx, y + cy);
+		break;
+	case 'V':
+		cairo_move_to(pc->cr, x, y + cy);
+		cairo_line_to(pc->cr, x - cx, y - cy);
+		cairo_line_to(pc->cr, x + cx, y - cy);
+		break;
+	case '<':
+		cairo_move_to(pc->cr, x - cx, y);
+		cairo_line_to(pc->cr, x + cx, y - cy);
+		cairo_line_to(pc->cr, x + cx, y + cy);
+		break;
+	case '>':
+		cairo_move_to(pc->cr, x + cx, y);
+		cairo_line_to(pc->cr, x - cx, y - cy);
+		cairo_line_to(pc->cr, x - cx, y + cy);
+		break;
+	}
+
+	cairo_close_path(pc->cr);
+	cairo_fill(pc->cr);
+}
+
+void
 paint_line(struct paint_context *pc, struct component *c)
 {
 	struct vertex *v0, *start = NULL, *v1, *v;
@@ -167,6 +211,9 @@ paint_line(struct paint_context *pc, struct component *c)
 	}
 
 	cairo_stroke(pc->cr);
+
+	paint_arrow(pc, start);
+	paint_arrow(pc, v1);
 }
 
 void
@@ -188,10 +235,10 @@ paint(int i_height, int i_width)
 	pc->s = &default_paint_schema;
 	pc->i_width = i_width;
 	pc->i_height = i_height;
-	pc->o_width = pc->s->border_left + pc->i_width * pc->s->xscale + pc->s->border_right;
-	pc->o_height = pc->s->border_top + pc->i_height * pc->s->yscale + pc->s->border_bottom;
-	pc->o_x = pc->s->border_left + pc->s->xscale / 2;
-	pc->o_y = pc->s->border_top + pc->s->yscale / 2;
+	pc->o_width = pc->s->border_left + pc->i_width * pc->s->xcell + pc->s->border_right;
+	pc->o_height = pc->s->border_top + pc->i_height * pc->s->ycell + pc->s->border_bottom;
+	pc->o_x = pc->s->border_left + pc->s->xcell / 2;
+	pc->o_y = pc->s->border_top + pc->s->ycell / 2;
 
 	pc->surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, pc->o_width, pc->o_height);
 	pc->cr = cairo_create(pc->surface);
