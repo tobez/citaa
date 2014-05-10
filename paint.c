@@ -9,6 +9,8 @@
 #include "citaa.h"
 #include "bsdqueue.h"
 
+#define PI 3.141592653589793238462643383
+
 struct schema {
 	int xcell;
 	int ycell;
@@ -19,6 +21,7 @@ struct schema {
 	double fuzz_x;
 	double fuzz_y;
 	double dash_spec[2];
+	double point_marker_radius;
 } default_paint_schema = {
 	.xcell = 10,
 	.ycell = 14,
@@ -29,6 +32,7 @@ struct schema {
 	.fuzz_x = 0.5,
 	.fuzz_y = 0.5,
 	.dash_spec = { 6.0, 4.0 },
+	.point_marker_radius = 3.0,
 };
 
 struct paint_context {
@@ -43,6 +47,8 @@ struct paint_context {
 	int o_height;
 	int o_x;
 	int o_y;
+
+	struct image *point_markers;
 };
 
 #define pcx(x) pc->o_x + (x) * pc->s->xcell + pc->s->fuzz_x
@@ -74,6 +80,9 @@ paint_box(struct paint_context *pc, struct component *c)
 	while (1) {
 		if (v0->x < min_x) min_x = v0->x;
 		if (v0->y < min_y) min_y = v0->y;
+
+		if (v0->c == '*')
+			pc->point_markers->d[v0->y][v0->x] = '*';
 
 		v1 = v0->e[dir];
 
@@ -200,10 +209,16 @@ paint_line(struct paint_context *pc, struct component *c)
 	for (dir = 0; dir < N_DIRECTIONS; dir++)
 		if (v0->e[dir])	break;
 
+	if (v0->c == '*')
+		pc->point_markers->d[v0->y][v0->x] = '*';
+
 	while (v0) {
 		v1 = v0->e[dir];
 
 		cairo_line_to(pc->cr, pcx(v1->x), pcy(v1->y));
+
+		if (v1->c == '*')
+			pc->point_markers->d[v1->y][v1->x] = '*';
 
 		v0 = NULL;
 		for (i = 1; i >= -1; i--) {
@@ -232,6 +247,27 @@ paint_component(struct paint_context *pc, struct component *c)
 }
 
 void
+paint_point_markers(struct paint_context *pc)
+{
+	int y, x;
+
+	cairo_set_line_width(pc->cr, 1);
+	cairo_set_line_cap(pc->cr, CAIRO_LINE_CAP_ROUND);
+
+	for (y = 0; y < pc->i_height; y++)
+		for (x = 0; x < pc->i_width; x++)
+			if (pc->point_markers->d[y][x] != ' ') {
+				cairo_arc(pc->cr, pcx(x), pcy(y),
+						  pc->s->point_marker_radius,
+						  0.0, 2*PI);
+				cairo_set_source_rgb(pc->cr, 1, 1, 1);
+				cairo_fill_preserve(pc->cr);
+				cairo_set_source_rgb(pc->cr, 0, 0, 0);
+				cairo_stroke(pc->cr);
+			}
+}
+
+void
 paint(int i_height, int i_width)
 {
 	struct paint_context ctx;
@@ -246,6 +282,8 @@ paint(int i_height, int i_width)
 	pc->o_x = pc->s->border_left + pc->s->xcell / 2;
 	pc->o_y = pc->s->border_top + pc->s->ycell / 2;
 
+	pc->point_markers = create_image(i_height, i_width, ' ');
+
 	pc->surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, pc->o_width, pc->o_height);
 	pc->cr = cairo_create(pc->surface);
 
@@ -257,6 +295,7 @@ paint(int i_height, int i_width)
 		paint_component(pc, c);
 	}
 	// paint free text
+	paint_point_markers(pc);
 
 	cairo_surface_write_to_png(pc->surface, "o.png");
 
