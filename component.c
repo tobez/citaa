@@ -208,7 +208,7 @@ copy_component(struct component *o)
 {
 	struct vertex *v, **vo, **vr;
 	struct component *r;
-	int dir, nv, i, j;
+	int dir, nv, i;
 
 	nv = 0;
 	TAILQ_FOREACH(v, &o->vertices, list) {
@@ -224,6 +224,7 @@ copy_component(struct component *o)
 
 	i = 0;
 	TAILQ_FOREACH(v, &o->vertices, list) {
+		v->aux = i;
 		vo[i] = v;
 		vr[i] = add_vertex_to_component(r, v->y, v->x, v->c);
 		i++;
@@ -233,13 +234,7 @@ copy_component(struct component *o)
 	TAILQ_FOREACH(v, &o->vertices, list) {
 		for (dir = 0; dir < N_DIRECTIONS; dir++) {
 			if (v->e[dir]) {
-				/* XXX This is O(n^2) and thus inefficient. */
-				for (j = 0; j < nv; j++) {
-					if (vo[j] == v->e[dir]) {
-						vr[i]->e[dir] = vr[j];
-						break;
-					}
-				}
+				vr[i]->e[dir] = vr[v->e[dir]->aux];
 			}
 		}
 		i++;

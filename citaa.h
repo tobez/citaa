@@ -51,7 +51,7 @@ TAILQ_HEAD(vertex_head, vertex);
 struct vertex
 {
 	TAILQ_ENTRY(vertex) list;
-	int x, y;
+	int x, y, aux;
 	CHAR c;
 	struct vertex *e[4];  /* edges in four directions */
 };
