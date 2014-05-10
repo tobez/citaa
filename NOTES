@@ -8,7 +8,6 @@
 - text: "normal" "|", "-", ":", "=", "v", "V" etc
 - text: merge one-two space-separated pieces
 
-- trace: BUG branches between boxes are not detected
 - trace: single-char branches
 
 - datastructure hash or tree by coordinate

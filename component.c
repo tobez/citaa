@@ -203,15 +203,84 @@ extract_one_loop(struct vertex *v0, int dir, struct component_head *storage)
 	printf("loop area = %d\n", c->area);
 }
 
+struct component*
+copy_component(struct component *o)
+{
+	struct vertex *v, **vo, **vr;
+	struct component *r;
+	int dir, nv, i, j;
+
+	nv = 0;
+	TAILQ_FOREACH(v, &o->vertices, list) {
+		nv++;
+	}
+
+	vo = malloc(sizeof(struct vertex *) * nv);
+	if (!vo) croak(1, "copy_component:malloc(%d vertices #1)", nv);
+	vr = malloc(sizeof(struct vertex *) * nv);
+	if (!vr) croak(1, "copy_component:malloc(%d vertices #2)", nv);
+
+	r = create_component(NULL);
+
+	i = 0;
+	TAILQ_FOREACH(v, &o->vertices, list) {
+		vo[i] = v;
+		vr[i] = add_vertex_to_component(r, v->y, v->x, v->c);
+		i++;
+	}
+
+	i = 0;
+	TAILQ_FOREACH(v, &o->vertices, list) {
+		for (dir = 0; dir < N_DIRECTIONS; dir++) {
+			if (v->e[dir]) {
+				/* XXX This is O(n^2) and thus inefficient. */
+				for (j = 0; j < nv; j++) {
+					if (vo[j] == v->e[dir]) {
+						vr[i]->e[dir] = vr[j];
+						break;
+					}
+				}
+			}
+		}
+		i++;
+	}
+
+	free(vo);
+	free(vr);
+
+	return r;
+}
+
+/* subtract component c from component C */
+void
+subtract_component(struct component *C, struct component *c)
+{
+	struct vertex *v, *V;
+	int dir;
+
+	TAILQ_FOREACH(v, &c->vertices, list) {
+		V = find_vertex_in_component(C, v->y, v->x);
+		if (V) {
+			for (dir = 0; dir < N_DIRECTIONS; dir++) {
+				if (v->e[dir]) {
+					V->e[dir] = NULL;
+				}
+			}
+		}
+	}
+}
+
 void
 extract_loops(struct component *o, struct component_head *storage)
 {
 	struct component_head tmp;
-	struct component *c, *c_tmp, *c_max;
+	struct component *c, *c_tmp, *c_max, *orig;
 	struct vertex *v;
 	int dir;
 
 	TAILQ_INIT(&tmp);
+
+	orig = copy_component(o);
 
 	TAILQ_FOREACH(v, &o->vertices, list) {
 		for (dir = COMPASS_FIRST; dir <= COMPASS_LAST; dir++) {
@@ -231,8 +300,11 @@ extract_loops(struct component *o, struct component_head *storage)
 		if (c != c_max) {
 			c->type = CT_BOX;
 			TAILQ_INSERT_TAIL(storage, c, list);
+			subtract_component(orig, c);
 		}
 	}
+
+	extract_branches(orig, storage);
 }
 
 void
