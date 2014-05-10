@@ -1,10 +1,19 @@
-- text extraction, textual attributes of boxes, colors/shapes
+- paint: text
+- paint: separated boxes (adjacent edges) - option-controlled
+- paint: rounded corners
+- paint: "*"
+- paint: single-char branches (| -)
+- paint: special boxes (document etc)
+
+- text: "normal" "|", "-", ":", "=", "v", "V" etc
+- text: merge one-two space-separated pieces
+
+- trace: BUG branches between boxes are not detected
+- trace: single-char branches
+
 - datastructure hash or tree by coordinate
 	- store "this was drawn already" flag - for "*" and maybe for something else
 - finding shared edges to make adjustments for the line drawn
-- experiment with shapes for non-rectangular cycles - what ditaa does?
-- painting parameters/schema
-- actual painting
 - output type from file extension and/or command line parameter
 - PNG, SVG, EPS, PDF
 
