@@ -55,6 +55,24 @@ struct paint_context {
 #define pcy(y) pc->o_y + (y) * pc->s->ycell + pc->s->fuzz_y
 
 void
+paint_text(struct paint_context *pc, struct text_head *head, int white_text)
+{
+	struct text *t;
+
+	TAILQ_FOREACH(t, head, list) {
+		if (white_text)
+			cairo_set_source_rgb(pc->cr, 1, 1, 1);
+		else
+			cairo_set_source_rgb(pc->cr, 0, 0, 0);
+		cairo_select_font_face(pc->cr, "DejaVu", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+		cairo_set_font_size(pc->cr, 12);
+		cairo_move_to(pc->cr, pcx(t->x), pcy(t->y));  
+		cairo_show_text(pc->cr, t->t);
+		cairo_new_path(pc->cr);
+	}
+}
+
+void
 paint_box(struct paint_context *pc, struct component *c)
 {
 	struct vertex *v0, *start, *v1;
@@ -113,20 +131,7 @@ paint_box(struct paint_context *pc, struct component *c)
 	cairo_set_source_rgb(pc->cr, 0, 0, 0);
 	cairo_stroke(pc->cr);
 
-	{
-	static int boxn = 0;
-	char t[40];
-	boxn++;
-	snprintf(t, 40, "%d", boxn);
-	if (c->has_custom_background && c->white_text)
-		cairo_set_source_rgb(pc->cr, 1, 1, 1);
-	else
-		cairo_set_source_rgb(pc->cr, 0, 0, 0);
-	cairo_select_font_face(pc->cr, "DejaVu", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
-	cairo_set_font_size(pc->cr, 12);
-	cairo_move_to(pc->cr, pcx(min_x+1), pcy(min_y+1));  
-	  cairo_show_text(pc->cr, t);
-	}
+	paint_text(pc, &c->text, c->has_custom_background && c->white_text);
 }
 
 void
@@ -294,7 +299,7 @@ paint(int i_height, int i_width)
 	TAILQ_FOREACH(c, &components, list) {
 		paint_component(pc, c);
 	}
-	// paint free text
+	paint_text(pc, &free_text, 0);
 	paint_point_markers(pc);
 
 	cairo_surface_write_to_png(pc->surface, "o.png");
