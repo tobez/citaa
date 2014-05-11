@@ -101,7 +101,6 @@ extract_text(struct image *img)
 {
 	int y, x, sx;
 	CHAR *buf, *s;
-	CHAR *special_chars = "|:-=Vv^<>/\\+* ";
 	struct rgb rgb;
 	struct component *c;
 	int shape;
@@ -114,7 +113,8 @@ extract_text(struct image *img)
 		for (x = 0; x < img->w; x++) {
 			s = buf;
 			sx = x;
-			while (!strchr(special_chars, img->d[y][x]) && x < img->w) {
+
+			while (!TAILQ_FIRST(&components_by_point[y][x]) && img->d[y][x] != ' ') {
 				*s++ = img->d[y][x++];
 			}
 			*s = '\0';
