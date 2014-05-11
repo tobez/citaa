@@ -96,6 +96,7 @@ TAILQ_HEAD(component_head, component);
 extern struct component_head connected_components;
 extern struct component_head **components_by_point;
 extern struct component_head components;
+extern struct image* component_marks;
 
 struct vertex *add_vertex(struct vertex_head *vs, int y, int x, CHAR c);
 struct vertex *add_vertex_to_component(struct component *c, int y, int x, CHAR ch);
@@ -114,5 +115,6 @@ void sort_components(struct component_head *storage);
 void build_components_by_point(struct component_head *storage, int h, int w);
 void determine_dashed_components(struct component_head *storage, struct image *img);
 void extract_text(struct image *img);
+void mark_components(struct image *img);
 
 #endif

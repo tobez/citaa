@@ -7,6 +7,8 @@
 #include "citaa.h"
 #include "bsdqueue.h"
 
+struct image* component_marks;
+
 int
 main(int argc, char **argv)
 {
@@ -40,6 +42,9 @@ main(int argc, char **argv)
 	sort_components(&components);
 	build_components_by_point(&components, orig->h, orig->w);
 	determine_dashed_components(&components, orig);
+
+	component_marks = create_image(orig->h, orig->w, ' ');
+	mark_components(component_marks);
 
 	extract_text(orig);
 

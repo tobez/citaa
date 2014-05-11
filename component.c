@@ -531,3 +531,121 @@ find_enclosing_component(struct component_head *components, int y, int x)
 	return NULL;
 }
 
+void
+mark_points(struct image *img, int y0, int x0, int y1, int x1)
+{
+	int exch;
+
+	if (y0 == y1) {
+		if (x0 > x1) {
+			exch = x0;
+			x0 = x1;
+			x1 = exch;
+		}
+		while (x0 <= x1) {
+			img->d[y0][x0] = '*';
+			x0++;
+		}
+	} else if (x0 == x1) {
+		if (y0 > y1) {
+			exch = y0;
+			y0 = y1;
+			y1 = exch;
+		}
+		while (y0 <= y1) {
+			img->d[y0][x0] = '*';
+			y0++;
+		}
+	}
+}
+
+void
+mark_box(struct image *img, struct component *c)
+{
+	struct vertex *v0, *start, *v1;
+	int i, dir, new_dir;
+
+	start = TAILQ_FIRST(&c->vertices);
+
+	v0 = start;
+	for (dir = 0; dir < N_DIRECTIONS; dir++)
+		if (v0->e[dir])	break;
+
+	while (1) {
+		v1 = v0->e[dir];
+
+		mark_points(img, v0->y, v0->x, v1->y, v1->x);
+
+		if (v1 == start)
+			break;
+
+		for (i = 1; i >= -1; i--) {
+			new_dir = (dir + i + 4) % N_DIRECTIONS;
+			if (v1->e[new_dir]) {
+				dir = new_dir;
+				v0 = v1;
+				break;
+			}
+		}
+	}
+}
+
+void
+mark_line(struct image *img, struct component *c)
+{
+	struct vertex *v0, *start = NULL, *v1, *v;
+	int i, dir, new_dir;
+
+	TAILQ_FOREACH(v, &c->vertices, list) {
+		int cnt = 0;
+
+		for (dir = 0; dir < N_DIRECTIONS; dir++) {
+			if (v->e[dir]) {
+				cnt++;
+				start = v;
+			}
+		}
+		if (cnt == 1)
+			break;
+	}
+	if (!start) return;
+
+	v0 = start;
+	for (dir = 0; dir < N_DIRECTIONS; dir++)
+		if (v0->e[dir])	break;
+
+	while (v0) {
+		v1 = v0->e[dir];
+
+		mark_points(img, v0->y, v0->x, v1->y, v1->x);
+
+		v0 = NULL;
+		for (i = 1; i >= -1; i--) {
+			new_dir = (dir + i + 4) % N_DIRECTIONS;
+			if (v1->e[new_dir]) {
+				dir = new_dir;
+				v0 = v1;
+				break;
+			}
+		}
+	}
+}
+
+void
+mark_component(struct image *img, struct component *c)
+{
+	if (c->type == CT_BOX)
+		mark_box(img, c);
+	else if (c->type == CT_LINE)
+		mark_line(img, c);
+}
+
+void
+mark_components(struct image *img)
+{
+	struct component *c;
+
+	TAILQ_FOREACH(c, &components, list) {
+		mark_component(img, c);
+	}
+}

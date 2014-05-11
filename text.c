@@ -114,7 +114,7 @@ extract_text(struct image *img)
 			s = buf;
 			sx = x;
 
-			while (!TAILQ_FIRST(&components_by_point[y][x]) && img->d[y][x] != ' ') {
+			while (img->d[y][x] != ' ' && component_marks->d[y][x] == ' ') {
 				*s++ = img->d[y][x++];
 			}
 			*s = '\0';
