@@ -1,4 +1,3 @@
-- paint: text
 - paint: separated boxes (adjacent edges) - option-controlled
 - paint: rounded corners
 - paint: single-char branches (| -)
