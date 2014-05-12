@@ -145,7 +145,7 @@ paint_text(struct paint_context *pc, struct text_head *head, int white_text)
 		else
 			cairo_set_source_rgb(pc->cr, 0, 0, 0);
 		cairo_select_font_face(pc->cr, "DejaVu", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
-		cairo_set_font_size(pc->cr, 12);
+		cairo_set_font_size(pc->cr, 13);
 		cairo_move_to(pc->cr, pcx(t->x), pcy(t->y));  
 		cairo_show_text(pc->cr, t->t);
 		cairo_new_path(pc->cr);
