@@ -4,6 +4,7 @@
 - paint: special boxes (document etc)
 - paint: shaded boxes
 - paint: convert -> | into ->| unless ditaa compat is enabled
+- paint: move font information into graphic schema
 
 - trace: single-char branches
 
