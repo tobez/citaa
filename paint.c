@@ -63,7 +63,7 @@ draw_line_to(struct paint_context *pc, struct vertex *v, int towards)
 {
 	double x = pcx(v->x);
 	double y = pcy(v->y);
-	double x0, y0, x1, y1;
+	double x0 = 0, y0 = 0, x1 = 0, y1 = 0;
 	int round = 0;
 
 	if (v->c == '/') {
