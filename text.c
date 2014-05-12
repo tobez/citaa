@@ -97,19 +97,37 @@ is_shape(CHAR *shape_name, int *shape)
 }
 
 void
+extend_text(struct text *t, int n_spaces, CHAR *suffix)
+{
+	CHAR *new_t;
+
+	new_t = malloc(sizeof(CHAR) * (t->len + 1 + n_spaces + strlen(suffix)));
+	if (!new_t) croak(1, "extend_text:malloc(new_t)");
+
+	strcpy(new_t, t->t);
+	while (n_spaces--) strcat(new_t, " ");
+	strcat(new_t, suffix);
+	free(t->t);
+	t->t = new_t;
+	t->len = strlen(new_t);
+}
+
+void
 extract_text(struct image *img)
 {
 	int y, x, sx;
 	CHAR *buf, *s;
 	struct rgb rgb;
-	struct component *c;
+	struct component *c, *last_c = NULL;
 	int shape;
-	struct text *t;
+	struct text *t, *last_t = NULL;
 
 	buf = malloc(sizeof(CHAR)*img->w);
 	if (!buf)	croak(1, "extract_text:malloc(buf)");
 
 	for (y = 0; y < img->h; y++) {
+		last_c = NULL;
+		last_t = NULL;
 		for (x = 0; x < img->w; x++) {
 			s = buf;
 			sx = x;
@@ -132,8 +150,17 @@ extract_text(struct image *img)
 				} else if (is_shape(buf, &shape) && c) {
 					c->shape = shape;
 				} else {
-					t = create_text(y, sx, buf);
-					TAILQ_INSERT_TAIL(c ? &c->text : &free_text, t, list);
+					if (last_t && last_c == c &&
+						sx > 0 && img->d[y][sx-1] == ' ' &&
+						last_t->x + last_t->len + 1 == sx)
+					{
+						extend_text(last_t, 1, buf);
+					} else {
+						t = create_text(y, sx, buf);
+						TAILQ_INSERT_TAIL(c ? &c->text : &free_text, t, list);
+						last_c = c;
+						last_t = t;
+					}
 				}
 			}
 		}

@@ -4,17 +4,16 @@
 - paint: single-char branches (| -)
 - paint: special boxes (document etc)
 - paint: shaded boxes
-
-- text: "normal" "|", "-", ":", "=", "v", "V" etc
-- text: merge one-two space-separated pieces
+- paint: convert -> | into ->| unless ditaa compat is enabled
 
 - trace: single-char branches
 
-- datastructure hash or tree by coordinate
-	- store "this was drawn already" flag - for "*" and maybe for something else
 - finding shared edges to make adjustments for the line drawn
 - output type from file extension and/or command line parameter
 - PNG, SVG, EPS, PDF
+
+- cmdline: ditaa compat
+- cmdline: custom graphic schemas
 
 - debug output control via environment vars
 	- CITAA_DEBUG_TRACE=1  etc etc
