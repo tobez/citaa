@@ -1,0 +1,11 @@
+**** Work in progress!  Not suitable for production use! ****
+
+citaa is a small command-line utility written in C, that can convert
+diagrams drawn using ascii art ('drawings' that contain characters that
+resemble lines like | / - ), into proper graphical file.
+
+citaa largely implements functionality provided by a Java utility ditaa
+(http://ditaa.sourceforge.net/), with some minor differences.
+
+The citaa source code and algorithms are not related to ditaa source
+code and algorithms in any intentional way.
