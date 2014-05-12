@@ -61,7 +61,7 @@ trace_south(struct image *img, struct image *status, struct component *c, struct
 		u = add_vertex_to_component(c, y, x, ch);
 		connect_vertices(v, u);
 		printf("V %c (%d,%d) arrow end\n", ch, y, x);
-		c->type = CT_LINE;
+		c->type = CT_BRANCH;
 		break;
 	case '/':
 		status->d[y][x] = seen;
@@ -126,7 +126,7 @@ trace_north(struct image *img, struct image *status, struct component *c, struct
 		u = add_vertex_to_component(c, y, x, ch);
 		connect_vertices(v, u);
 		printf("^ %c (%d,%d) arrow end\n", ch, y, x);
-		c->type = CT_LINE;
+		c->type = CT_BRANCH;
 		break;
 	case '/':
 		status->d[y][x] = seen;
@@ -191,7 +191,7 @@ trace_east(struct image *img, struct image *status, struct component *c, struct 
 		u = add_vertex_to_component(c, y, x, ch);
 		connect_vertices(v, u);
 		printf("> %c (%d,%d) arrow end\n", ch, y, x);
-		c->type = CT_LINE;
+		c->type = CT_BRANCH;
 		break;
 	case '/':
 		status->d[y][x] = seen;
@@ -256,7 +256,7 @@ trace_west(struct image *img, struct image *status, struct component *c, struct 
 		u = add_vertex_to_component(c, y, x, ch);
 		connect_vertices(v, u);
 		printf("< %c (%d,%d) arrow end\n", ch, y, x);
-		c->type = CT_LINE;
+		c->type = CT_BRANCH;
 		break;
 	case '/':
 		status->d[y][x] = seen;

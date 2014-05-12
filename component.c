@@ -373,7 +373,7 @@ again:
 
 	TAILQ_FOREACH_SAFE(c, &tmp, list, c_tmp) {
 		TAILQ_REMOVE(&tmp, c, list);
-		c->type = CT_LINE;
+		c->type = CT_BRANCH;
 		TAILQ_INSERT_TAIL(storage, c, list);
 	}
 }
@@ -477,11 +477,11 @@ determine_dashed_components(struct component_head *storage, struct image *img)
 			if (c->dashed)
 				break;
 		}
-		if (c->dashed && c->type == CT_LINE) {
+		if (c->dashed && c->type == CT_BRANCH) {
 			/* Propagate dashed status for all connected branches */
 			TAILQ_FOREACH(v, &c->vertices, list) {
 				TAILQ_FOREACH(connected, &components_by_point[v->y][v->x], list_by_point)
-					if (connected->type == CT_LINE)
+					if (connected->type == CT_BRANCH)
 						connected->dashed = 1;
 			}
 		}
@@ -636,7 +636,7 @@ mark_component(struct image *img, struct component *c)
 {
 	if (c->type == CT_BOX)
 		mark_box(img, c);
-	else if (c->type == CT_LINE)
+	else if (c->type == CT_BRANCH)
 		mark_line(img, c);
 }
 

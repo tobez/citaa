@@ -16,7 +16,7 @@
 #define ST_SEEN '0'
 
 #define CT_UNKNOWN 0
-#define CT_LINE    1
+#define CT_BRANCH  1
 #define CT_BOX     2
 
 #define SHAPE_NORMAL   0

@@ -22,6 +22,8 @@ struct schema {
 	double fuzz_y;
 	double dash_spec[2];
 	double point_marker_radius;
+	double x_round;
+	double y_round;
 } default_paint_schema = {
 	.xcell = 10,
 	.ycell = 14,
@@ -33,6 +35,8 @@ struct schema {
 	.fuzz_y = 0.5,
 	.dash_spec = { 6.0, 4.0 },
 	.point_marker_radius = 3.0,
+	.x_round = 5.0,
+	.y_round = 7.0,
 };
 
 struct paint_context {
@@ -53,6 +57,82 @@ struct paint_context {
 
 #define pcx(x) pc->o_x + (x) * pc->s->xcell + pc->s->fuzz_x
 #define pcy(y) pc->o_y + (y) * pc->s->ycell + pc->s->fuzz_y
+
+void
+draw_line_to(struct paint_context *pc, struct vertex *v, int towards)
+{
+	double x = pcx(v->x);
+	double y = pcy(v->y);
+	double x0, y0, x1, y1;
+	int round = 0;
+
+	if (v->c == '/') {
+		round = 1;
+		switch (towards) {
+		case NORTH:  /* will turn EAST */
+			x0 = x;
+			y0 = y + pc->s->y_round;
+			x1 = x + pc->s->x_round;
+			y1 = y;
+			break;
+		case SOUTH:  /* will turn WEST */
+			x0 = x;
+			y0 = y - pc->s->y_round;
+			x1 = x - pc->s->x_round;
+			y1 = y;
+			break;
+		case EAST:  /* will turn NORTH */
+			x0 = x - pc->s->x_round;
+			y0 = y;
+			x1 = x;
+			y1 = y - pc->s->y_round;
+			break;
+		case WEST:  /* will turn SOUTH */
+			x0 = x + pc->s->x_round;
+			y0 = y;
+			x1 = x;
+			y1 = y + pc->s->y_round;
+			break;
+		}
+	} else if (v->c == '\\') {
+		round = 1;
+		switch (towards) {
+		case NORTH:  /* will turn WEST */
+			x0 = x;
+			y0 = y + pc->s->y_round;
+			x1 = x - pc->s->x_round;
+			y1 = y;
+			break;
+		case SOUTH:  /* will turn EAST */
+			x0 = x;
+			y0 = y - pc->s->y_round;
+			x1 = x + pc->s->x_round;
+			y1 = y;
+			break;
+		case EAST:  /* will turn SOUTH */
+			x0 = x - pc->s->x_round;
+			y0 = y;
+			x1 = x;
+			y1 = y + pc->s->y_round;
+			break;
+		case WEST:  /* will turn NORTH */
+			x0 = x + pc->s->x_round;
+			y0 = y;
+			x1 = x;
+			y1 = y - pc->s->y_round;
+			break;
+		}
+	} else {
+		x0 = x;
+		y0 = y;
+	}
+
+	cairo_line_to(pc->cr, x0, y0);
+	if (round) {
+		printf("ROUND at %d, %d\n", v->y, v->x);
+		cairo_curve_to(pc->cr, x, y, x, y, x1, y1);
+	}
+}
 
 void
 paint_text(struct paint_context *pc, struct text_head *head, int white_text)
@@ -180,7 +260,7 @@ paint_arrow(struct paint_context *pc, struct vertex *v)
 }
 
 void
-paint_line(struct paint_context *pc, struct component *c)
+paint_branch(struct paint_context *pc, struct component *c)
 {
 	struct vertex *v0, *start = NULL, *v1, *v;
 	int i, dir, new_dir;
@@ -220,7 +300,7 @@ paint_line(struct paint_context *pc, struct component *c)
 	while (v0) {
 		v1 = v0->e[dir];
 
-		cairo_line_to(pc->cr, pcx(v1->x), pcy(v1->y));
+		draw_line_to(pc, v1, dir);
 
 		if (v1->c == '*')
 			pc->point_markers->d[v1->y][v1->x] = '*';
@@ -247,8 +327,8 @@ paint_component(struct paint_context *pc, struct component *c)
 {
 	if (c->type == CT_BOX)
 		paint_box(pc, c);
-	else if (c->type == CT_LINE)
-		paint_line(pc, c);
+	else if (c->type == CT_BRANCH)
+		paint_branch(pc, c);
 }
 
 void
