@@ -24,6 +24,10 @@ struct schema {
 	double point_marker_radius;
 	double x_round;
 	double y_round;
+	double shadow_shade;
+	int shadow_blur_radius;
+	int shadow_offset_x;
+	int shadow_offset_y;
 } default_paint_schema = {
 	.xcell = 10,
 	.ycell = 14,
@@ -37,6 +41,10 @@ struct schema {
 	.point_marker_radius = 3.0,
 	.x_round = 5.0,
 	.y_round = 7.0,
+	.shadow_shade = 0.7,
+	.shadow_blur_radius = 4,
+	.shadow_offset_x = 4,
+	.shadow_offset_y = 4,
 };
 
 struct paint_context {
@@ -54,6 +62,8 @@ struct paint_context {
 
 	struct image *point_markers;
 };
+
+extern void blur_image_surface (cairo_surface_t *surface, int radius);
 
 #define pcx(x) pc->o_x + (x) * pc->s->xcell + pc->s->fuzz_x
 #define pcy(y) pc->o_y + (y) * pc->s->ycell + pc->s->fuzz_y
@@ -157,59 +167,114 @@ paint_box(struct paint_context *pc, struct component *c)
 {
 	struct vertex *v0, *start, *v1;
 	int i, dir, new_dir;
-	int min_x = INT_MAX, min_y = INT_MAX;
+	int min_x = INT_MAX, min_y = INT_MAX, max_x = 0, max_y = 0;
+	double x, y, sx = 0, sy = 0;
 
-	cairo_set_line_width(pc->cr, 1);
-	cairo_set_line_cap(pc->cr, CAIRO_LINE_CAP_ROUND);
-	cairo_set_source_rgb(pc->cr, 0, 0, 0);
+	#define OP_CALC_EXTENTS 0
+	#define OP_PAINT_SHADOW 1
+	#define OP_PAINT 2
+	#define USE_XY(ix, iy) x = pcx(ix); y = pcy(iy); \
+		if ((int)(x) < min_x) min_x = (int)(x); \
+		if ((int)(y) < min_y) min_y = (int)(y); \
+		if ((int)(x+0.5) > max_x) max_x = (int)(x+0.5); \
+		if ((int)(y+0.5) > max_y) max_y = (int)(y+0.5)
 
-	if (c->dashed)
-		cairo_set_dash(pc->cr, pc->s->dash_spec, 2, 0);
-	else
-		cairo_set_dash(pc->cr, NULL, 0, 0);
+	cairo_t *cr[3];
+	cairo_surface_t *shadow_surface;
+	int op;
 
-	start = TAILQ_FIRST(&c->vertices);
-	cairo_move_to(pc->cr, pcx(start->x), pcy(start->y));
+	cr[OP_CALC_EXTENTS] = NULL;
+	cr[OP_PAINT_SHADOW] = NULL;
+	cr[OP_PAINT] = pc->cr;
 
-	v0 = start;
-	for (dir = 0; dir < N_DIRECTIONS; dir++)
-		if (v0->e[dir])	break;
+	for (op = OP_CALC_EXTENTS; op <= OP_PAINT; op++) {
+		if (op == OP_PAINT_SHADOW) {
+			shadow_surface =
+				cairo_image_surface_create(CAIRO_FORMAT_ARGB32,
+										   max_x - min_x + 1,
+										   max_y - min_y + 1);
+			cr[OP_PAINT_SHADOW] = cairo_create(shadow_surface);
+			sx = min_x;
+			sy = min_y;
+		}
 
-	while (1) {
-		if (v0->x < min_x) min_x = v0->x;
-		if (v0->y < min_y) min_y = v0->y;
+		if (op == OP_PAINT_SHADOW) {
+			cairo_set_source_rgb(cr[op],
+								 pc->s->shadow_shade,
+								 pc->s->shadow_shade,
+								 pc->s->shadow_shade);
+		}
 
-		if (v0->c == '*')
-			pc->point_markers->d[v0->y][v0->x] = '*';
+		if (op == OP_PAINT) {
+			sx = 0;
+			sy = 0;
+			cairo_set_source_surface(pc->cr, shadow_surface,
+									 pc->s->shadow_offset_x + min_x,
+									 pc->s->shadow_offset_y + min_y);
+			cairo_paint(pc->cr);
+			cairo_destroy(cr[OP_PAINT_SHADOW]);
+			cairo_surface_destroy(shadow_surface);
 
-		v1 = v0->e[dir];
+			cairo_set_line_width(pc->cr, 1);
+			cairo_set_line_cap(pc->cr, CAIRO_LINE_CAP_ROUND);
+			cairo_set_source_rgb(pc->cr, 0, 0, 0);
 
-		cairo_line_to(pc->cr, pcx(v1->x), pcy(v1->y));
-		if (v1 == start)
-			break;
+			if (c->dashed)
+				cairo_set_dash(pc->cr, pc->s->dash_spec, 2, 0);
+			else
+				cairo_set_dash(pc->cr, NULL, 0, 0);
+		}
 
-		for (i = 1; i >= -1; i--) {
-			new_dir = (dir + i + 4) % N_DIRECTIONS;
-			if (v1->e[new_dir]) {
-				dir = new_dir;
-				v0 = v1;
+		start = TAILQ_FIRST(&c->vertices);
+		USE_XY(start->x, start->y);
+		if (cr[op]) cairo_move_to(cr[op], x-sx, y-sy);
+
+		v0 = start;
+		for (dir = 0; dir < N_DIRECTIONS; dir++)
+			if (v0->e[dir])	break;
+
+		while (1) {
+			if (v0->c == '*')
+				pc->point_markers->d[v0->y][v0->x] = '*';
+
+			v1 = v0->e[dir];
+
+			USE_XY(v1->x, v1->y);
+			if (cr[op]) cairo_line_to(cr[op], x-sx, y-sy);
+			if (v1 == start)
 				break;
+
+			for (i = 1; i >= -1; i--) {
+				new_dir = (dir + i + 4) % N_DIRECTIONS;
+				if (v1->e[new_dir]) {
+					dir = new_dir;
+					v0 = v1;
+					break;
+				}
 			}
 		}
+
+		if (cr[op]) cairo_close_path(cr[op]);
+
+		if (op == OP_PAINT) {
+			if (c->has_custom_background)
+				cairo_set_source_rgb(pc->cr,
+									 c->custom_background.r / 15.0,
+									 c->custom_background.g / 15.0,
+									 c->custom_background.b / 15.0);
+			else
+				cairo_set_source_rgb(pc->cr, 1, 1, 1);
+			cairo_fill_preserve(pc->cr);
+
+			cairo_set_source_rgb(pc->cr, 0, 0, 0);
+			cairo_stroke(pc->cr);
+		}
+
+		if (op == OP_PAINT_SHADOW) {
+			cairo_fill(cr[op]);
+			blur_image_surface(shadow_surface, pc->s->shadow_blur_radius);
+		}
 	}
-
-	cairo_close_path(pc->cr);
-	if (c->has_custom_background)
-		cairo_set_source_rgb(pc->cr,
-							 c->custom_background.r / 15.0,
-							 c->custom_background.g / 15.0,
-							 c->custom_background.b / 15.0);
-	else
-		cairo_set_source_rgb(pc->cr, 1, 1, 1);
-	cairo_fill_preserve(pc->cr);
-
-	cairo_set_source_rgb(pc->cr, 0, 0, 0);
-	cairo_stroke(pc->cr);
 
 	paint_text(pc, &c->text, c->has_custom_background && c->white_text);
 }

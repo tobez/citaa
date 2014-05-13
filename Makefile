@@ -4,12 +4,12 @@ CAIRO_CFLAGS = `pkg-config --cflags gtk+-2.0`
 CAIRO_LFLAGS = `pkg-config --libs gtk+-2.0`
 CC?=cc
 
-citaa: main.o carp.o read.o image.o graph.o trace.o paint.o component.o text.o
+citaa: main.o carp.o read.o image.o graph.o trace.o paint.o component.o text.o blur.o
 	$(CC) $(CFLAGS) $(OPTIMIZE) $(CAIRO_LFLAGS) -o citaa \
-	    main.o carp.o read.o image.o graph.o trace.o paint.o component.o text.o
+	    main.o carp.o read.o image.o graph.o trace.o paint.o component.o text.o blur.o
 
 clean:
-	rm citaa main.o carp.o read.o image.o graph.o trace.o paint.o component.o text.o
+	rm citaa main.o carp.o read.o image.o graph.o trace.o paint.o component.o text.o blur.o
 
 main.o: main.c citaa.h
 	$(CC) -c $(CFLAGS) $(OPTIMIZE) -o main.o main.c
@@ -37,4 +37,7 @@ trace.o: trace.c citaa.h
 
 paint.o: paint.c citaa.h
 	$(CC) -c $(CFLAGS) $(OPTIMIZE) $(CAIRO_CFLAGS) -o paint.o paint.c
+
+blur.o: blur.c citaa.h
+	$(CC) -c $(CFLAGS) $(OPTIMIZE) $(CAIRO_CFLAGS) -o blur.o blur.c
 
