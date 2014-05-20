@@ -176,9 +176,8 @@ extract_one_loop(struct vertex *v0, int dir, struct component_head *storage)
 		v = u->e[dir];
 		printf("coming from (%d,%d) to (%d,%d) due %s\n",
 			   u->y, u->x, v->y, v->x, DIR[dir]);
-		if (v == v0)
-			v_ = find_vertex_in_component(c, v->y, v->x);
-		else
+		v_ = find_vertex_in_component(c, v->y, v->x);
+		if (!v_)
 			v_ = add_vertex_to_component(c, v->y, v->x, v->c);
 		connect_vertices(u_, v_);
 		u->e[dir] = NULL;  /* remove the edge we just followed */
@@ -199,6 +198,8 @@ extract_one_loop(struct vertex *v0, int dir, struct component_head *storage)
 		if (!u)	croakx(1, "extract_one_loop: cannot decide where to go from (%d,%d)\"%c\" -> %s",
 					   v->y, v->x, v->c, DIR[dir]);
 	}
+	extract_branches(c, storage);
+	printf("before loop calculation\n");
 	calculate_loop_area(c);
 	printf("loop area = %d\n", c->area);
 }
@@ -452,7 +453,7 @@ determine_dashed_components(struct component_head *storage, struct image *img)
 	int x, y;
 
 	TAILQ_FOREACH(c, storage, list) {
-		printf("====\n");
+		printf("dashed? ====\n");
 		TAILQ_FOREACH(u, &c->vertices, list) {
 			if ((v = u->e[EAST])) {
 				y = u->y;
@@ -486,6 +487,7 @@ determine_dashed_components(struct component_head *storage, struct image *img)
 			}
 		}
 	}
+	printf("end of dashed check\n");
 }
 
 struct component *
@@ -634,6 +636,10 @@ mark_line(struct image *img, struct component *c)
 void
 mark_component(struct image *img, struct component *c)
 {
+	dump_component(c);
+	printf("marking...\n");
+	if (c->type == CT_BOX && c->area == 0)
+		c->type = CT_BRANCH;
 	if (c->type == CT_BOX)
 		mark_box(img, c);
 	else if (c->type == CT_BRANCH)
