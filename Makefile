@@ -5,7 +5,7 @@ CAIRO_LFLAGS = `pkg-config --libs gtk+-2.0`
 CC?=cc
 
 citaa: main.o carp.o read.o image.o graph.o trace.o paint.o component.o text.o blur.o
-	$(CC) $(CFLAGS) $(OPTIMIZE) $(CAIRO_LFLAGS) -o citaa \
+	$(CC) $(CFLAGS) $(OPTIMIZE) -lm $(CAIRO_LFLAGS) -o citaa \
 	    main.o carp.o read.o image.o graph.o trace.o paint.o component.o text.o blur.o
 
 clean:

@@ -12,6 +12,9 @@
 #define COMPASS_LAST  SOUTH
 #define N_DIRECTIONS  4
 
+#define CLOCKWISE -1
+#define COUNTERCLOCKWISE 1
+
 #define ST_EMPTY ' '
 #define ST_SEEN '0'
 

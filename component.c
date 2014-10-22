@@ -655,3 +655,80 @@ mark_components(struct image *img)
 		mark_component(img, c);
 	}
 }
+
+/* TODO: implement me */
+static int
+component_direction(struct component *c)
+{
+	/* count number of left and right turns */
+	/* return COUNTERCLOCKWISE if left > right */
+	/* return CLOCKWISE if right > left */
+	/* bitch and die if right == left */
+
+	struct vertex *v0, *start, *v1;
+	int i, dir, new_dir, left = 0, right = 0;
+
+	start = TAILQ_FIRST(&c->vertices);
+
+	v0 = start;
+	for (dir = 0; dir < N_DIRECTIONS; dir++)
+		if (v0->e[dir])	break;
+
+	while (1) {
+		v1 = v0->e[dir];
+
+		if (v1 == start)
+			break;
+
+		for (i = 1; i >= -1; i--) {
+			new_dir = (dir + i + 4) % N_DIRECTIONS;
+			if (v1->e[new_dir]) {
+
+				/* XXX: find out dir-new_dir is left or right here */
+				dir = new_dir;
+				v0 = v1;
+				break;
+			}
+		}
+	}
+
+	if (left > right)
+		return COUNTERCLOCKWISE;
+	if (right > left)
+		return CLOCKWISE;
+	croakx(1, "internal: component_direction: left turns equals right turns");
+	return 0;
+}
+
+/* TODO: implement me */
+static void
+flip_component(struct component_head *components, struct component *c)
+{
+	/* Allocate new component, copy the given component into it,
+	 * with and OPPOSITE traversal direction (reversed order of
+	 * nodes, flipped direction of traversal).
+	 * Then replace the given component with the new one,
+	 * in-place in the components list, and free the old one.
+	 *
+	 * See whether TAILQ_SWAP() might be useful for making the
+	 * sbstitution.
+	 */
+}
+
+/* XXX: careful;  since it changes the component list,
+ * it should be called before other functions which store
+ * pointers to the components in other places!
+ */
+void
+make_all_loops_going_counterclockwise(struct component_head *components)
+{
+	struct component *c;
+
+	TAILQ_FOREACH(c, components, list) {
+		if (!c->type == CT_BOX)
+			continue;
+		if (component_direction(c) == CLOCKWISE)
+			flip_component(components, c);
+	}
+}
+
